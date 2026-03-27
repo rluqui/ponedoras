@@ -2,6 +2,7 @@
 const ModuloDashboard = (() => {
 
   let chartProduccion = null;
+  let chartAcumulado = null;
 
   function render() {
     return `
@@ -34,8 +35,14 @@ const ModuloDashboard = (() => {
           </div>
         </div>
 
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:16px; position:relative; min-height:250px; margin-bottom:16px">
+           <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--texto-secundario); font-weight: 500;">Diario: Producción vs. Ventas</h4>
+           <div style="position:relative; height:200px"><canvas id="canvas-produccion"></canvas></div>
+        </div>
+
         <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:16px; position:relative; min-height:250px">
-           <canvas id="canvas-produccion"></canvas>
+           <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--texto-secundario); font-weight: 500;">Acumulado del Período</h4>
+           <div style="position:relative; height:200px"><canvas id="canvas-acumulado"></canvas></div>
         </div>
       </div>
 
@@ -135,10 +142,8 @@ const ModuloDashboard = (() => {
   }
 
   async function cargarDatos(paramFiltro) {
-    if (chartProduccion) {
-      chartProduccion.destroy(); // limpiar previo
-      chartProduccion = null;
-    }
+    if (chartProduccion) { chartProduccion.destroy(); chartProduccion = null; }
+    if (chartAcumulado) { chartAcumulado.destroy(); chartAcumulado = null; }
     
     const valGalpon = document.getElementById('filtro-galpon')?.value || 'todos';
 
@@ -240,6 +245,55 @@ const ModuloDashboard = (() => {
              grid: { display: false },
              ticks: { color: '#999', maxTicksLimit: 7 }
           }
+        }
+      }
+    });
+
+    const ctxAcum = document.getElementById('canvas-acumulado');
+    if (!ctxAcum) return;
+
+    let acumH = 0; let acumV = 0;
+    const serieHuevosAcum = serieHuevos.map(v => { acumH += v; return acumH; });
+    const serieVentasAcum = serieVentas.map(v => { acumV += v; return acumV; });
+
+    chartAcumulado = new Chart(ctxAcum, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Total Acumulado (Huevos)',
+            data: serieHuevosAcum,
+            borderColor: '#ffc107',
+            backgroundColor: 'rgba(255, 193, 7, 0.05)',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 1
+          },
+          {
+            label: 'Ventas Acumuladas',
+            data: serieVentasAcum,
+            borderColor: '#4caf50',
+            backgroundColor: 'rgba(76, 175, 80, 0.05)',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        color: '#ccc',
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { color: '#ddd', usePointStyle: true, boxWidth: 8 } }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, ticks: { color: '#999', precision: 0 } },
+          x: { grid: { display: false }, ticks: { color: '#999', maxTicksLimit: 7 } }
         }
       }
     });
