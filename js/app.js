@@ -13,6 +13,7 @@ const App = (() => {
     redes:          ModuloRedes,
     inspeccion:     ModuloInspeccion,
     configuracion:  ModuloConfiguracion,
+    dashboard:      ModuloDashboard
   };
 
   let tabActiva = 'hoy';

@@ -264,13 +264,34 @@ const DB = (() => {
         prioridad: 'baja'
       }));
 
+    // Tarea Inteligente de Ventas + Excepción 0
+    let huboVentasHoy = localStorage.getItem(`ventas_zero_${hoy}`) === 'true';
+    if (!huboVentasHoy) {
+      if (db) {
+         const { data: vts } = await db.from('ventas').select('id').eq('fecha', hoy).limit(1);
+         if (vts && vts.length > 0) huboVentasHoy = true;
+      }
+    }
+    const autoVentas = {
+        id: 'auto_ventas',
+        titulo: huboVentasHoy ? 'Ventas registradas hoy' : 'Registrar ventas del día',
+        estado: huboVentasHoy ? 'hecho' : 'pendiente',
+        automatica: true,
+        tipo_auto: 'ventas',
+        prioridad: 'alta'
+    };
+
     // Retorna ordenado: Auto pendientes -> DB pendientes -> Auto Hechas -> DB hechas
-    return [
+    const finales = [
       ...autoPendientes,
+      (!huboVentasHoy ? autoVentas : null),
       ...tareasDB.filter(t => t.estado !== 'hecho'),
       ...autoHechas,
+      (huboVentasHoy ? autoVentas : null),
       ...tareasDB.filter(t => t.estado === 'hecho')
-    ];
+    ].filter(Boolean);
+
+    return finales;
   }
 
   async function toggleTareaDB(id, estadoActual) {
@@ -618,9 +639,36 @@ const DB = (() => {
     obtenerVacunasProximas,
     obtenerEstadisticasApp, registrarMensajeWhatsApp,
     obtenerUsuariosPendientes, aprobarUsuario, cambiarPlanUsuario,
-    limpiarBaseDeDatos
+    limpiarBaseDeDatos,
+    obtenerDataDashboard
   };
 })();
+
+// ── IMPLEMENTACIÓN DASHBOARD ──
+async function obtenerDataDashboard(dias) {
+  const db = obtenerSupabase();
+  const limite = new Date();
+  limite.setDate(limite.getDate() - (dias - 1));
+  const limiteStr = limite.toISOString().split('T')[0];
+
+  if (!db) {
+     const _p = []; const _v = [];
+     for(let i=0; i<dias; i++) {
+       const t = new Date(); t.setDate(t.getDate() - i);
+       const d = t.toISOString().split('T')[0];
+       _p.push({ fecha: d, huevos: Math.floor(300+Math.random()*20), mortandad: Math.floor(Math.random()*2) });
+       _v.push({ fecha: d, docenas: Math.floor(20+Math.random()*10) });
+     }
+     return { produccion: _p, ventas: _v };
+  }
+
+  const { data: prod } = await db.from('produccion_diaria')
+    .select('fecha, huevos, mortandad').gte('fecha', limiteStr);
+  const { data: vent } = await db.from('ventas')
+    .select('fecha, docenas').gte('fecha', limiteStr);
+
+  return { produccion: prod || [], ventas: vent || [] };
+}
 
 // ── FUNCIONES DE APROBACIÓN (fuera del IIFE para usar DB internamente) ──
 

@@ -3136,3 +3136,8 @@ select.campo-input option { background: var(--verde-medio); color: var(--texto-p
   background: rgba(244,67,54,0.20);
   color: #f44336;
 }
+
+/* Dashboard Nav Override */
+.bottom-nav { grid-template-columns: repeat(6, 1fr) !important; }
+.nav-item { padding: 4px 2px !important; }
+.nav-label { font-size: 0.65rem !important; letter-spacing: -0.2px; }

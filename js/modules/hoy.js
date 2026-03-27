@@ -281,11 +281,18 @@ const ModuloHoy = (() => {
         
         // Estilos para tareas inteligentes
         const icon = t.estado === 'hecho' ? '✅' : (t.automatica ? '⚙️' : '⬜');
-        const clickDiv = t.automatica && t.estado !== 'hecho' ? `onclick="App.navegar('produccion')"` : '';
+        let dest = 'produccion';
+        if (t.tipo_auto === 'ventas') dest = 'ventas';
+        
+        const clickDiv = t.automatica && t.estado !== 'hecho' ? `onclick="App.navegar('${dest}')"` : '';
         const clickBtn = t.automatica ? 'disabled' : `onclick="ModuloHoy.toggleTarea('${t.id}','${t.estado}')"`;
         const styleDiv = t.automatica && t.estado !== 'hecho' ? `cursor:pointer; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1)` : '';
         const styleText = t.automatica && t.estado !== 'hecho' ? `color:var(--texto-primario); font-weight:600;` : '';
-        const callToAction = t.automatica && t.estado !== 'hecho' ? `<span style="color:var(--color-primario); font-size:0.85rem; white-space:nowrap; padding-left:8px">👉 Ir</span>` : '';
+        
+        let callToAction = t.automatica && t.estado !== 'hecho' ? `<span style="color:var(--color-primario); font-size:0.75rem; white-space:nowrap; padding-left:8px">👉 Ir</span>` : '';
+        if (t.automatica && t.estado !== 'hecho' && t.tipo_auto === 'ventas') {
+          callToAction += `<button onclick="ModuloHoy.confirmarZeroVentas(event)" style="background:rgba(255,255,255,0.1); border:none; padding:4px 8px; border-radius:6px; margin-left:12px; font-size:0.75rem; font-weight:600; color:white; cursor:pointer">Cero ventas</button>`;
+        }
 
         return `
         <div class="tarea-item ${clzCompletada}" id="tarea-${t.id}" ${clickDiv} style="${styleDiv}">
@@ -297,7 +304,9 @@ const ModuloHoy = (() => {
               <span class="tarea-texto" style="${styleText}">${t.titulo}</span>
               ${m ? `<span class="tarea-asignado">${m.avatar} ${m.nombre}</span>` : ''}
             </div>
-            ${callToAction}
+            <div style="display:flex; align-items:center">
+              ${callToAction}
+            </div>
           </div>
         </div>`;
       }).join('');
@@ -396,5 +405,15 @@ const ModuloHoy = (() => {
     }
   }
 
-  return { render, postRender, toggleTarea };
+  function confirmarZeroVentas(e) {
+    if (e) e.stopPropagation();
+    if (confirm("¿Registrar el final del día SIN ventas concretadas? Esta acción cerrará la tarea.")) {
+       const hoy = new Date().toISOString().split('T')[0];
+       localStorage.setItem(`ventas_zero_${hoy}`, 'true');
+       UI.mostrarToast("Día cerrado sin ventas", "success");
+       App.navegar('hoy');
+    }
+  }
+
+  return { render, postRender, toggleTarea, confirmarZeroVentas };
 })();
