@@ -9,6 +9,7 @@ const App = (() => {
     ventas:         ModuloVentas,
     clientes:       ModuloClientes,
     plantel:        ModuloPlantel,
+    lotes:          ModuloPlantel,   // alias directo al módulo de lotes
     redes:          ModuloRedes,
     inspeccion:     ModuloInspeccion,
     configuracion:  ModuloConfiguracion,
@@ -169,23 +170,27 @@ const App = (() => {
     document.getElementById('top-nombre-granja').textContent = usuario.granja || 'Mi Granja';
     actualizarFecha();
 
-    // Nivel badge
+    // Badge de granja (sin número de nivel para no confundir al productor)
     const nivel = CONFIG.NIVELES[usuario.nivel || 1];
-    document.getElementById('nivel-texto').textContent = `${nivel.icono} Nv.${usuario.nivel}`;
+    document.getElementById('nivel-texto').textContent = `${nivel.icono} ${nivel.nombre}`;
 
     // Configurar navegación
     configurarNav();
 
-    // Configurar botón perfil
-    document.getElementById('btn-perfil').onclick = () => {
-      UI.mostrarToast(`👤 ${usuario.nombre} · ${nivel.nombre}`, 'info');
-    };
+    // El botón ⚙️ ya tiene onclick="App.navegar('configuracion')" en el HTML.
+    // Solo se guarda referencia para mostrar info de usuario si se necesita en el futuro.
 
     // Iniciar asistente IA flotante
     if (typeof Asistente !== 'undefined') Asistente.iniciar();
 
     // Navegar a HOY
     navegar('hoy');
+
+    // Verificar progreso del productor en segundo plano (sin bloquear UI)
+    // Si subió de nivel, muestra modal de celebración automáticamente
+    if (typeof Progreso !== 'undefined') {
+      setTimeout(() => Progreso.verificarNivel(), 2000);
+    }
 
     // Actualizar fecha cada minuto
     setInterval(actualizarFecha, 60000);

@@ -133,24 +133,29 @@ const ModuloPlantel = (() => {
       const mortalidad = l.cantidad_inicial > 0
         ? (((l.cantidad_inicial - l.cantidad_actual) / l.cantidad_inicial) * 100).toFixed(1)
         : 0;
+      const edadLabel = typeof semanas === 'number'
+        ? semanas < 18 ? `${semanas} sem • Crecimiento`
+          : semanas < 75 ? `${semanas} sem • Pico producción`
+          : `${semanas} sem • Declive`
+        : '—';
 
       return `
-      <div class="lote-card" onclick="ModuloPlantel.verDetalle('${l.id}')">
+      <div class="lote-card">
         <div class="lote-card-header">
           <div>
             <span class="lote-raza">${l.raza || 'Lote sin nombre'}</span>
-            <span class="lote-galpon">${l.galpon?.nombre || l.galpon_id || ''}</span>
+            <span class="lote-galpon">🏠 ${l.galpon?.nombre || l.galpon_id || 'Sin galpón'}</span>
           </div>
           <span class="lote-estado-chip" style="background:${est.color}20;color:${est.color}">${est.label}</span>
         </div>
         <div class="lote-card-datos">
           <div class="lote-dato">
             <span class="lote-dato-val">${l.cantidad_actual}</span>
-            <span class="lote-dato-label">Aves activas</span>
+            <span class="lote-dato-label">Aves hoy</span>
           </div>
           <div class="lote-dato">
-            <span class="lote-dato-val">${semanas}</span>
-            <span class="lote-dato-label">Semanas edad</span>
+            <span class="lote-dato-val">${edadLabel}</span>
+            <span class="lote-dato-label">Edad</span>
           </div>
           <div class="lote-dato">
             <span class="lote-dato-val ${parseFloat(mortalidad) > 5 ? 'kpi-rojo' : ''}">${mortalidad}%</span>
@@ -161,15 +166,33 @@ const ModuloPlantel = (() => {
             <span class="lote-dato-label">Inicial</span>
           </div>
         </div>
+        <div class="lote-card-acciones">
+          <button class="btn-icon-sm" title="Editar lote"
+            onclick="event.stopPropagation();ModuloPlantel.abrirFormulario('${l.id}')">✏️ Editar</button>
+          ${l.estado !== 'descartado' && l.estado !== 'vendido' ? `
+          <button class="btn-icon-sm btn-danger-sm" title="Descartar lote"
+            onclick="event.stopPropagation();ModuloPlantel.confirmarDescartar('${l.id}','${(l.raza||'lote').replace(/'/g,"\\'")}')">🗑 Descartar</button>` : ''}
+        </div>
       </div>`;
     }).join('');
   }
 
   // ── DETALLE ───────────────────────────────────────────────────
   function verDetalle(id) {
-    loteSeleccionado = id;
-    // Mostrar modal de edición directamente
+    // Abrir formulario de edición directamente al hacer click
     abrirFormulario(id);
+  }
+
+  // ── CONFIRMAR DESCARTE ────────────────────────────────────────
+  async function confirmarDescartar(id, raza) {
+    if (!confirm(`¿Descartar el lote "${raza}"? Cambiará su estado a ❌ Descartado.`)) return;
+    const res = await DB.desactivarLote(id);
+    if (res.ok) {
+      UI.mostrarToast(`✅ Lote "${raza}" descartado`, 'info');
+      cargarLotes();
+    } else {
+      UI.mostrarToast('❌ Error al descartar. Revisá la conexión.', 'error');
+    }
   }
 
   // ── FORMULARIO ABM ────────────────────────────────────────────
@@ -303,6 +326,6 @@ const ModuloPlantel = (() => {
   return {
     render, postRender,
     abrirFormulario, cerrarFormulario, guardarLote,
-    seleccionarEstado, verDetalle
+    seleccionarEstado, verDetalle, confirmarDescartar
   };
 })();

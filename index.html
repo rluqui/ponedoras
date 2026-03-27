@@ -155,13 +155,14 @@
 
         <!-- BOTTOM NAV -->
         <nav class="bottom-nav" id="bottom-nav">
+            <!-- Flujo natural: Resumen → Carga → Lotes → Ventas → Más -->
             <button class="nav-item active" data-tab="hoy">
                 <span class="nav-icon">☀️</span>
                 <span class="nav-label">HOY</span>
             </button>
-            <button class="nav-item" data-tab="clientes">
-                <span class="nav-icon">👥</span>
-                <span class="nav-label">CLIENTES</span>
+            <button class="nav-item" data-tab="granja">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">GALPONES</span>
             </button>
             <button class="nav-item nav-item-fab" data-tab="produccion">
                 <span class="nav-icon-fab">✏️</span>
@@ -173,7 +174,7 @@
             </button>
             <button class="nav-item" data-tab="plantel">
                 <span class="nav-icon">🐔</span>
-                <span class="nav-label">MÁS</span>
+                <span class="nav-label">PLANTEL</span>
             </button>
         </nav>
 
@@ -189,6 +190,18 @@
 
     <!-- TOAST -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- BANNER DE NUEVA VERSIÓN DISPONIBLE -->
+    <div id="banner-update" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#1b5e20,#2e7d32); color:#fff; border-radius:16px; padding:14px 18px; box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:9999; width:calc(100% - 32px); max-width:400px; align-items:center; gap:12px; font-family:var(--fuente-ui,'Inter',sans-serif); border:1px solid rgba(255,255,255,0.15);">
+      <span style="font-size:1.5rem">🆕</span>
+      <div style="flex:1;">
+        <strong style="font-size:0.95rem;display:block">Nueva versión disponible</strong>
+        <span style="font-size:0.8rem;opacity:0.85">Tocá para actualizar la app</span>
+      </div>
+      <button id="btn-actualizar-app" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:#fff; border-radius:10px; padding:8px 14px; font-weight:700; font-size:0.85rem; cursor:pointer; white-space:nowrap;">
+        Actualizar ↺
+      </button>
+    </div>
 
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -210,6 +223,41 @@
     <script src="js/modules/asistente.js"></script>
     <script src="js/modules/contador_ia.js"></script>
     <script src="js/modules/clientes.js"></script>
+    <script src="js/progreso.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+    // ── REGISTRO DEL SW + DETECCIÓN DE ACTUALIZACIONES ──────────────────────
+    if ('serviceWorker' in navigator) {
+      let swEsperando = null;
+
+      navigator.serviceWorker.register('/sw.js').then(registro => {
+        if (registro.waiting) { swEsperando = registro.waiting; mostrarBannerUpdate(); }
+        registro.addEventListener('updatefound', () => {
+          const nuevoSW = registro.installing;
+          nuevoSW.addEventListener('statechange', () => {
+            if (nuevoSW.state === 'installed' && navigator.serviceWorker.controller) {
+              swEsperando = nuevoSW;
+              mostrarBannerUpdate();
+            }
+          });
+        });
+      }).catch(err => console.warn('SW: error de registro', err));
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+
+      document.getElementById('btn-actualizar-app')?.addEventListener('click', () => {
+        if (swEsperando) swEsperando.postMessage({ tipo: 'SKIP_WAITING' });
+      });
+    }
+
+    function mostrarBannerUpdate() {
+      const banner = document.getElementById('banner-update');
+      if (banner) {
+        banner.style.display = 'flex';
+        setTimeout(() => { if (banner) banner.style.display = 'none'; }, 30000);
+      }
+    }
+    </script>
 </body>
 </html>

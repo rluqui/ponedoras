@@ -97,6 +97,10 @@ const DB = (() => {
     return { ok: !error, error };
   }
 
+  async function desactivarLote(id) {
+    return actualizarLote(id, { estado: 'descartado' });
+  }
+
   function DEMO_LOTES() {
     const hoy = new Date();
     const hace30 = new Date(hoy); hace30.setDate(hoy.getDate() - 30);
@@ -523,7 +527,7 @@ const DB = (() => {
   return {
     obtenerProduccionHoy, obtenerProduccionSemana, obtenerProduccionFecha,
     insertarProduccion,
-    obtenerLotesActivos, obtenerLotesTodos, insertarLote, actualizarLote,
+    obtenerLotesActivos, obtenerLotesTodos, insertarLote, actualizarLote, desactivarLote,
     obtenerGalpones, insertarGalpon, actualizarGalpon, desactivarGalpon,
     obtenerEquipo, insertarMiembro, actualizarMiembro, desactivarMiembro,
     obtenerTareasHoy, toggleTareaDB, insertarTarea,

@@ -76,16 +76,16 @@ const ModuloConfiguracion = (() => {
         </button>
       </div>
 
-      <!-- Galpones activos -->
+
+      <!-- Acceso rápido a Lotes -->
       <div class="config-seccion">
-        <h3 class="config-titulo-sec">🏠 Galpones</h3>
-        <div id="cfg-galpones-lista">
-          <div class="skeleton" style="height:48px;border-radius:12px"></div>
-        </div>
-        <button class="btn-secondary" style="margin-top:12px" onclick="ModuloConfiguracion.nuevoGalpon()">
-          + Agregar galpón
+        <h3 class="config-titulo-sec">📦 Lotes de aves</h3>
+        <p class="config-desc">Gestioná los ingresos, bajas y estados de tus lotes de gallinas.</p>
+        <button class="btn-primary" style="margin-top:4px" onclick="App.navegar('plantel')">
+          🐣 Ir al Plantel de Lotes
         </button>
       </div>
+
 
       <!-- Textos de venta automáticos -->
       <div class="config-seccion">
@@ -216,8 +216,7 @@ Consultanos por cantidad y precio 👇</textarea>`;
 
   // ── POST RENDER ───────────────────────────────────────────────
   async function postRender() {
-    cargarGalponesConfig();
-    cargarListaGallineros();   // ← ABM de gallineros
+    cargarListaGallineros();   // ABM de gallineros
 
     const usuario = Auth.obtenerUsuario();
     const el = document.getElementById('cfg-cuenta-info');
