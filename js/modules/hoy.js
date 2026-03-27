@@ -277,14 +277,27 @@ const ModuloHoy = (() => {
       if (pctEl) pctEl.textContent = `${hechas}/${tareas.length}`;
       lista.innerHTML = tareas.map(t => {
         const m = t.equipo_miembros;
+        const clzCompletada = t.estado === 'hecho' ? 'completada' : '';
+        
+        // Estilos para tareas inteligentes
+        const icon = t.estado === 'hecho' ? '✅' : (t.automatica ? '⚙️' : '⬜');
+        const clickDiv = t.automatica && t.estado !== 'hecho' ? `onclick="App.navegar('produccion')"` : '';
+        const clickBtn = t.automatica ? 'disabled' : `onclick="ModuloHoy.toggleTarea('${t.id}','${t.estado}')"`;
+        const styleDiv = t.automatica && t.estado !== 'hecho' ? `cursor:pointer; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1)` : '';
+        const styleText = t.automatica && t.estado !== 'hecho' ? `color:var(--texto-primario); font-weight:600;` : '';
+        const callToAction = t.automatica && t.estado !== 'hecho' ? `<span style="color:var(--color-primario); font-size:0.85rem; white-space:nowrap; padding-left:8px">👉 Ir</span>` : '';
+
         return `
-        <div class="tarea-item ${t.estado === 'hecho' ? 'completada' : ''}" id="tarea-${t.id}">
-          <button class="tarea-check" onclick="ModuloHoy.toggleTarea('${t.id}','${t.estado}')">
-            ${t.estado === 'hecho' ? '✅' : '⬜'}
+        <div class="tarea-item ${clzCompletada}" id="tarea-${t.id}" ${clickDiv} style="${styleDiv}">
+          <button class="tarea-check" ${clickBtn}>
+            ${icon}
           </button>
-          <div class="tarea-info">
-            <span class="tarea-texto">${t.titulo}</span>
-            ${m ? `<span class="tarea-asignado">${m.avatar} ${m.nombre}</span>` : ''}
+          <div class="tarea-info" style="display:flex; justify-content:space-between; align-items:center; width:100%">
+            <div style="display:flex; flex-direction:column; gap:2px">
+              <span class="tarea-texto" style="${styleText}">${t.titulo}</span>
+              ${m ? `<span class="tarea-asignado">${m.avatar} ${m.nombre}</span>` : ''}
+            </div>
+            ${callToAction}
           </div>
         </div>`;
       }).join('');

@@ -216,15 +216,61 @@ const DB = (() => {
   async function obtenerTareasHoy() {
     const db = obtenerSupabase();
     const hoy = new Date().toISOString().split('T')[0];
-    if (!db) return DEMO_TAREAS();
-    const { data, error } = await db
-      .from('tareas')
-      .select('*, equipo_miembros(nombre, avatar, rol)')
-      .or(`fecha_limite.eq.${hoy},fecha_limite.is.null`)
-      .neq('estado', 'hecho')
-      .order('prioridad', { ascending: false });
-    if (error) return DEMO_TAREAS();
-    return data || [];
+    
+    // 1. Tareas de BD (Manuales)
+    let tareasDB = [];
+    if (db) {
+      const { data, error } = await db
+        .from('tareas')
+        .select('*, equipo_miembros(nombre, avatar, rol)')
+        .or(`fecha_limite.eq.${hoy},fecha_limite.is.null`)
+        .order('prioridad', { ascending: false });
+      if (!error && data) tareasDB = data;
+    } else {
+      tareasDB = DEMO_TAREAS();
+    }
+
+    // 2. Generar Tareas Inteligentes (Auto-Checklist)
+    const galpones = await obtenerGalpones();
+    let galponesCargados = [];
+
+    if (db) {
+      const { data } = await db.from('produccion_diaria').select('galpon_id, galpon').eq('fecha', hoy);
+      galponesCargados = (data || []).map(p => p.galpon_id || p.galpon);
+    } else {
+      const gfi_prod = JSON.parse(localStorage.getItem('gfi_prod') || '[]');
+      galponesCargados = gfi_prod.filter(p => p.fecha === hoy).map(p => p.galpon_id || p.galpon);
+    }
+
+    const autoPendientes = galpones
+      .filter(g => !galponesCargados.includes(g.id) && !galponesCargados.includes(g.nombre))
+      .map(g => ({
+        id: 'auto_' + g.id,
+        titulo: `Recolectar huevos y chequear agua — ${g.nombre}`,
+        estado: 'pendiente',
+        automatica: true,
+        galpon_id: g.id,
+        prioridad: 'alta'
+      }));
+
+    const autoHechas = galpones
+      .filter(g => galponesCargados.includes(g.id) || galponesCargados.includes(g.nombre))
+      .map(g => ({
+        id: 'auto_' + g.id,
+        titulo: `Producción registrada — ${g.nombre}`,
+        estado: 'hecho',
+        automatica: true,
+        galpon_id: g.id,
+        prioridad: 'baja'
+      }));
+
+    // Retorna ordenado: Auto pendientes -> DB pendientes -> Auto Hechas -> DB hechas
+    return [
+      ...autoPendientes,
+      ...tareasDB.filter(t => t.estado !== 'hecho'),
+      ...autoHechas,
+      ...tareasDB.filter(t => t.estado === 'hecho')
+    ];
   }
 
   async function toggleTareaDB(id, estadoActual) {
@@ -345,9 +391,8 @@ const DB = (() => {
 
   function DEMO_TAREAS() {
     return [
-      { id: '1', titulo: 'Recolectar huevos — Galpón 1', estado: 'pendiente', equipo_miembros: { nombre: 'Juan', avatar: '🧑‍🌾' }, prioridad: 'alta' },
-      { id: '2', titulo: 'Controlar agua — Galpón 2',    estado: 'pendiente', equipo_miembros: { nombre: 'Juan', avatar: '🧑‍🌾' }, prioridad: 'alta' },
-      { id: '3', titulo: 'Publicar en Instagram',         estado: 'pendiente', equipo_miembros: { nombre: 'Laura', avatar: '📱' }, prioridad: 'normal' },
+      { id: '1', titulo: 'Comprar viruta para los nidos', estado: 'pendiente', equipo_miembros: { nombre: 'Juan', avatar: '🧑‍🌾' }, prioridad: 'alta' },
+      { id: '2', titulo: 'Publicar foto de maples en Instagram', estado: 'pendiente', equipo_miembros: { nombre: 'Laura', avatar: '📱' }, prioridad: 'normal' },
     ];
   }
 
