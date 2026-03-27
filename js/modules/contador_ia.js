@@ -3,11 +3,11 @@ const ContadorIA = (() => {
 
   const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-  // Objetos predefinidos
+  // Objetos predefinidos con Ingeniería de Prompts estricta para VLM
   const OBJETOS_PREDEF = [
-    { id: 'huevos',   nombre: 'Huevos',   emoji: '🥚', prompt: 'Contá todos los huevos visibles en esta imagen. Solo respondé con el número entero, sin texto adicional.' },
-    { id: 'gallinas', nombre: 'Gallinas', emoji: '🐔', prompt: 'Contá todas las gallinas o aves visibles en esta imagen. Solo respondé con el número entero, sin texto adicional.' },
-    { id: 'maples',   nombre: 'Maples',   emoji: '📦', prompt: 'Contá todos los maples, bandejas o cartones de huevos visibles en esta imagen. Solo respondé con el número entero, sin texto adicional.' },
+    { id: 'huevos',   nombre: 'Huevos',   emoji: '🥚', prompt: 'IMPORTANTE: Contá ÚNICAMENTE los huevos físicos reales (esferas) que estén visiblemente presentes. NO CUENTES los espacios vacíos de los maples o cartones. No asumas huevos ocultos. Escaneá cuidadosamente y respondé SOLAMENTE con el número entero.' },
+    { id: 'gallinas', nombre: 'Gallinas', emoji: '🐔', prompt: 'Contá todas las aves/gallinas claramente visibles en esta imagen. Solo respondé con el número entero.' },
+    { id: 'maples',   nombre: 'Maples',   emoji: '📦', prompt: 'Contá la cantidad de maples o cartones contenedores (independientemente de si están llenos o vacíos). Solo respondé con el número entero.' },
   ];
 
   const STORAGE_KEY = 'gfi_objetos_contador';
