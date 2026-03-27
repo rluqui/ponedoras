@@ -108,9 +108,14 @@ const ModuloConfiguracion = (() => {
         <div class="config-cuenta-info" id="cfg-cuenta-info">
           Cargando...
         </div>
-        <button class="btn-danger" onclick="ModuloConfiguracion.cerrarSesion()" style="margin-top:12px">
-          🚪 Cerrar sesión
-        </button>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn-secondary" style="border-color:#f44336;color:#f44336;" onclick="ModuloConfiguracion.cerrarSesion()">
+            🚪 Cerrar sesión
+          </button>
+          <button class="btn-danger" onclick="ModuloConfiguracion.limpiarBD()">
+            🗑 Limpiar App (Borrar datos)
+          </button>
+        </div>
       </div>
 
       <!-- Panel admin (visible solo si es_admin = true) -->
@@ -494,6 +499,22 @@ Consultanos por cantidad y precio 👇</textarea>`;
     Auth.cerrarSesion();
   }
 
+  async function limpiarBD() {
+    const confirmacion = prompt("⚠️ PELIGRO: Esto borrará todas las estadísticas, ventas y lotes. Escribí 'BORRAR' para confirmar:");
+    if (confirmacion === "BORRAR") {
+      UI.mostrarToast('⏳ Borrando base de datos...', 'info');
+      const res = await DB.limpiarBaseDeDatos();
+      if (res.ok) {
+         UI.mostrarToast('✅ La aplicación se ha restablecido a cero.', 'success');
+         setTimeout(() => location.reload(), 1500);
+      } else {
+         UI.mostrarToast('❌ Hubo un problema al borrar.', 'error');
+      }
+    } else if (confirmacion !== null) {
+      UI.mostrarToast('Cancelado. No se escribio BORRAR.', 'warning');
+    }
+  }
+
   function seleccionarTipo(tipo, el) {
     document.querySelectorAll('#cfg-tipo-selector .rol-opcion').forEach(e => e.classList.remove('seleccionado'));
     el.classList.add('seleccionado');
@@ -516,7 +537,7 @@ Consultanos por cantidad y precio 👇</textarea>`;
   return {
     render, postRender,
     guardarGranja, guardarPrecios, nuevoGalpon,
-    seleccionarTipo, copiarTexto, cerrarSesion,
+    seleccionarTipo, copiarTexto, cerrarSesion, limpiarBD,
     obtenerConfig,
     mostrarFormGallinero, editarGallinero, guardarGallinero,
     archivarGallinero, cancelarFormGallinero,

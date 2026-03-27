@@ -123,10 +123,21 @@ const DB = (() => {
     const db = obtenerSupabase();
     if (!db) return { ok: true };  // Demo: simular éxito
     const usuario = Auth.obtenerUsuario();
-    const { error } = await db.from('produccion_diaria').upsert([{
-      ...registro,
+
+    // Limpiar payload para evitar que PostgREST falle por columnas inexistentes
+    const payload = {
+      fecha: registro.fecha,
+      galpon: registro.galpon,
+      huevos: registro.huevos,
+      rotos: registro.rotos,
+      mortandad: registro.mortandad,
+      estado_agua: registro.estado_agua,
+      estado_alimento: registro.estado_alimento,
+      observaciones: registro.observaciones,
       operador_id: usuario?.id || null
-    }], { onConflict: 'fecha,galpon_id' });
+    };
+
+    const { error } = await db.from('produccion_diaria').upsert([payload], { onConflict: 'fecha,galpon' });
     return { ok: !error, error };
   }
 
@@ -524,6 +535,23 @@ const DB = (() => {
     localStorage.setItem('gfi_mensajes_wsp', String(actual + 1));
   }
 
+  async function limpiarBaseDeDatos() {
+    const db = obtenerSupabase();
+    if (!db) {
+       localStorage.clear();
+       return { ok: true };
+    }
+    // Ejecuta deletes masivos (filtro dummy para sortear PostgREST vacíos).
+    // RLS protegerá de borrar datos de otros usuarios si se aplica correctamente.
+    await db.from('produccion_diaria').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('ventas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('lotes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('galpones').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('clientes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    localStorage.clear();
+    return { ok: true };
+  }
+
   return {
     obtenerProduccionHoy, obtenerProduccionSemana, obtenerProduccionFecha,
     insertarProduccion,
@@ -537,7 +565,8 @@ const DB = (() => {
     insertarPublicacion, obtenerPublicacionesRecientes,
     obtenerVacunasProximas,
     obtenerEstadisticasApp, registrarMensajeWhatsApp,
-    obtenerUsuariosPendientes, aprobarUsuario, cambiarPlanUsuario
+    obtenerUsuariosPendientes, aprobarUsuario, cambiarPlanUsuario,
+    limpiarBaseDeDatos
   };
 })();
 

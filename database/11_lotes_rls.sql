@@ -10,18 +10,21 @@ ALTER TABLE public.galpones
 -- Habilitar RLS en lotes
 ALTER TABLE public.lotes ENABLE ROW LEVEL SECURITY;
 
--- Política: cualquier usuario autenticado puede ver lotes
-CREATE POLICY IF NOT EXISTS "lotes_select_authenticated"
+-- Políticas RLS para lotes
+-- (DROP primero para evitar duplicados si se re-ejecuta el script)
+DROP POLICY IF EXISTS "lotes_select_authenticated" ON public.lotes;
+DROP POLICY IF EXISTS "lotes_insert_authenticated" ON public.lotes;
+DROP POLICY IF EXISTS "lotes_update_authenticated" ON public.lotes;
+
+CREATE POLICY "lotes_select_authenticated"
   ON public.lotes FOR SELECT
   USING (auth.role() = 'authenticated');
 
--- Política: cualquier usuario autenticado puede insertar lotes
-CREATE POLICY IF NOT EXISTS "lotes_insert_authenticated"
+CREATE POLICY "lotes_insert_authenticated"
   ON public.lotes FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
 
--- Política: cualquier usuario autenticado puede actualizar lotes
-CREATE POLICY IF NOT EXISTS "lotes_update_authenticated"
+CREATE POLICY "lotes_update_authenticated"
   ON public.lotes FOR UPDATE
   USING (auth.role() = 'authenticated');
 
