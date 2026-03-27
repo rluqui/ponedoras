@@ -14,11 +14,17 @@ const ModuloDashboard = (() => {
       </div>
 
       <div class="seccion-bloque">
-        <div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:16px; padding-bottom:8px" id="dashboard-filtros">
-          <button class="pill-filtro activa" data-dias="7">Última Semana</button>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; padding-bottom:8px" id="dashboard-filtros">
+          <button class="pill-filtro activa" data-dias="7">7 Días</button>
           <button class="pill-filtro" data-dias="15">15 Días</button>
-          <button class="pill-filtro" data-dias="30">Último Mes</button>
-          <button class="pill-filtro" data-dias="365">Este Año</button>
+          <button class="pill-filtro" data-dias="30">30 Días</button>
+          <span style="color:var(--texto-secundario); margin:0 4px">|</span>
+          <div style="display:flex; gap:6px; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:4px 8px">
+            <input type="date" id="dash-desde" style="background:transparent; color:#fff; border:none; outline:none; font-family:inherit; font-size:0.8rem; cursor:pointer" title="Filtro Desde">
+            <span style="color:#aaa; font-size:0.8rem">-</span>
+            <input type="date" id="dash-hasta" style="background:transparent; color:#fff; border:none; outline:none; font-family:inherit; font-size:0.8rem; cursor:pointer" title="Filtro Hasta">
+            <button class="pill-filtro" id="btn-filtro-custom" style="padding:4px 8px; margin-left:4px; font-size:1rem" title="Aplicar rango">🔍</button>
+          </div>
         </div>
 
         <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:16px; position:relative; min-height:250px">
@@ -63,7 +69,15 @@ const ModuloDashboard = (() => {
   }
 
   function configurarFiltros() {
-    const botones = document.querySelectorAll('#dashboard-filtros .pill-filtro');
+    const botones = document.querySelectorAll('#dashboard-filtros .pill-filtro[data-dias]');
+    const btnCustom = document.getElementById('btn-filtro-custom');
+    
+    // Auto-completar fechas custom con la semana actual
+    const hoy = new Date();
+    const semanaAtras = new Date(); semanaAtras.setDate(semanaAtras.getDate() - 7);
+    document.getElementById('dash-hasta').value = hoy.toISOString().split('T')[0];
+    document.getElementById('dash-desde').value = semanaAtras.toISOString().split('T')[0];
+
     botones.forEach(btn => {
       btn.addEventListener('click', (e) => {
         botones.forEach(b => b.classList.remove('activa'));
@@ -73,16 +87,30 @@ const ModuloDashboard = (() => {
         cargarDatos(dias);
       });
     });
+
+    btnCustom.addEventListener('click', () => {
+        const d_desde = document.getElementById('dash-desde').value;
+        const d_hasta = document.getElementById('dash-hasta').value;
+        if(!d_desde || !d_hasta) return alert('Seleccioná ambas fechas');
+        if(d_desde > d_hasta) return alert('La fecha de inicio debe ser anterior a la de fin');
+        
+        botones.forEach(b => b.classList.remove('activa')); // sacar marca a las pildoras
+        
+        // Convertir formato para subtitulo humano (dd/mm/aaaa)
+        const fs = d_desde.split('-'); const fh = d_hasta.split('-');
+        document.querySelector('.hoy-subtitulo').textContent = `Desde ${fs[2]}/${fs[1]} hasta ${fh[2]}/${fh[1]}`;
+        cargarDatos({ desde: d_desde, hasta: d_hasta });
+    });
   }
 
-  async function cargarDatos(rangoDias) {
+  async function cargarDatos(paramFiltro) {
     if (chartProduccion) {
       chartProduccion.destroy(); // limpiar previo
       chartProduccion = null;
     }
     
-    // Obtener data del db
-    const datos = await DB.obtenerDataDashboard(rangoDias);
+    // Obtener data del db pasándole el numero o el objeto custom
+    const datos = await DB.obtenerDataDashboard(paramFiltro);
 
     // Preparar totales
     const maxHuevos = datos.produccion.reduce((s, d) => s + d.huevos, 0);

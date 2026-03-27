@@ -645,27 +645,38 @@ const DB = (() => {
 })();
 
 // ── IMPLEMENTACIÓN DASHBOARD ──
-async function obtenerDataDashboard(dias) {
+async function obtenerDataDashboard(paramFiltro) {
   const db = obtenerSupabase();
-  const limite = new Date();
-  limite.setDate(limite.getDate() - (dias - 1));
-  const limiteStr = limite.toISOString().split('T')[0];
+  let df, dt;
+  let diasSimulados = 7;
+
+  if (typeof paramFiltro === 'number') {
+     const limite = new Date();
+     limite.setDate(limite.getDate() - (paramFiltro - 1));
+     df = limite.toISOString().split('T')[0];
+     dt = new Date().toISOString().split('T')[0];
+     diasSimulados = paramFiltro;
+  } else {
+     df = paramFiltro.desde;
+     dt = paramFiltro.hasta;
+     diasSimulados = Math.round((new Date(dt) - new Date(df)) / 86400000) + 1;
+  }
 
   if (!db) {
      const _p = []; const _v = [];
-     for(let i=0; i<dias; i++) {
-       const t = new Date(); t.setDate(t.getDate() - i);
+     for(let i=0; i<diasSimulados; i++) {
+       const t = new Date(dt); t.setDate(t.getDate() - i);
        const d = t.toISOString().split('T')[0];
        _p.push({ fecha: d, huevos: Math.floor(300+Math.random()*20), mortandad: Math.floor(Math.random()*2) });
-       _v.push({ fecha: d, docenas: Math.floor(20+Math.random()*10) });
+       if(Math.random() > 0.3) _v.push({ fecha: d, docenas: Math.floor(10+Math.random()*15) });
      }
      return { produccion: _p, ventas: _v };
   }
 
   const { data: prod } = await db.from('produccion_diaria')
-    .select('fecha, huevos, mortandad').gte('fecha', limiteStr);
+    .select('fecha, huevos, mortandad').gte('fecha', df).lte('fecha', dt);
   const { data: vent } = await db.from('ventas')
-    .select('fecha, docenas').gte('fecha', limiteStr);
+    .select('fecha, docenas').gte('fecha', df).lte('fecha', dt);
 
   return { produccion: prod || [], ventas: vent || [] };
 }
