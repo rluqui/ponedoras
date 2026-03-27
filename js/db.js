@@ -2,6 +2,13 @@
 // Cada función tiene fallback a datos demo si no hay conexión
 const DB = (() => {
 
+  // Utilidad para evitar errores de type UUID ("demo-001" en modo demo)
+  function getOperadorUUID() {
+    const u = Auth.obtenerUsuario();
+    if (!u || !u.id) return null;
+    return u.id.length === 36 ? u.id : null;
+  }
+
   // ── PRODUCCIÓN DIARIA ─────────────────────────────────────────
 
   async function obtenerProduccionHoy() {
@@ -134,7 +141,7 @@ const DB = (() => {
       estado_agua: registro.estado_agua,
       estado_alimento: registro.estado_alimento,
       observaciones: registro.observaciones,
-      operador_id: usuario?.id || null
+      operador_id: getOperadorUUID()
     };
 
     const { error } = await db.from('produccion_diaria').upsert([payload], { onConflict: 'fecha,galpon' });
