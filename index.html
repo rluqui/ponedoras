@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2d5a1b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Granja Familiar Inteligente — Organizá tu granja, crecé en familia">
+    <title>🐔 Granja Familiar Inteligente</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐔</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="pantalla-carga" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-icon">🐔</div>
+            <h1 class="splash-titulo">Granja Familiar</h1>
+            <p class="splash-subtitulo">Tu granja, tu familia, tu negocio</p>
+            <div class="splash-loader"><div class="loader-bar"></div></div>
+        </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="pantalla-login" class="screen hidden">
+        <div class="login-bg"></div>
+        <div class="login-card">
+
+            <!-- Logo y título -->
+            <div class="login-logo">🥚</div>
+            <h2 class="login-titulo">Granja Familiar</h2>
+            <p class="login-sub">Organizá tu granja, crecé en familia</p>
+
+            <!-- Tabs Login / Registrar -->
+            <div class="login-tabs" id="login-tabs">
+                <button class="login-tab active" id="tab-ingresar" onclick="App.toggleLoginTab('ingresar')">
+                    Ingresar
+                </button>
+                <button class="login-tab" id="tab-registrar" onclick="App.toggleLoginTab('registrar')">
+                    Crear cuenta
+                </button>
+            </div>
+
+            <!-- FORM LOGIN -->
+            <form id="form-login" class="login-form">
+                <div class="campo-grupo">
+                    <label class="campo-label">📧 Email</label>
+                    <input type="email" id="login-email" class="campo-input"
+                           placeholder="tu@email.com" autocomplete="email" required>
+                </div>
+                <div class="campo-grupo">
+                    <label class="campo-label">🔑 Contraseña</label>
+                    <div class="campo-password-wrap">
+                        <input type="password" id="login-password" class="campo-input campo-password-input"
+                               placeholder="••••••••" autocomplete="current-password" required>
+                        <button type="button" class="btn-ver-pass" onclick="App.togglePassword('login-password', this)" title="Mostrar/ocultar contraseña">👁️</button>
+                    </div>
+                </div>
+                <button type="button" class="login-forgot" id="btn-forgot"
+                        onclick="App.recuperarPassword()">
+                    ¿Olvidaste tu contraseña?
+                </button>
+                <div id="login-error" class="error-mensaje hidden"></div>
+                <button type="submit" class="btn-primario btn-full" id="btn-login">
+                    <span>Ingresar a la granja 🌾</span>
+                </button>
+            </form>
+
+            <!-- FORM REGISTRO (oculto por defecto) -->
+            <form id="form-registro" class="login-form hidden">
+                <div class="campo-grupo">
+                    <label class="campo-label">👤 Tu nombre</label>
+                    <input type="text" id="reg-nombre" class="campo-input"
+                           placeholder="Ej: María González" autocomplete="name">
+                </div>
+                <div class="campo-grupo">
+                    <label class="campo-label">📧 Email</label>
+                    <input type="email" id="reg-email" class="campo-input"
+                           placeholder="tu@email.com" autocomplete="email" required>
+                </div>
+                <div class="campo-grupo">
+                    <label class="campo-label">🔑 Contraseña (mínimo 6 caracteres)</label>
+                    <div class="campo-password-wrap">
+                        <input type="password" id="reg-password" class="campo-input campo-password-input"
+                               placeholder="••••••••" autocomplete="new-password" required>
+                        <button type="button" class="btn-ver-pass" onclick="App.togglePassword('reg-password', this)" title="Mostrar/ocultar contraseña">👁️</button>
+                    </div>
+                </div>
+                <div id="reg-error" class="error-mensaje hidden"></div>
+                <button type="button" class="btn-primario btn-full" id="btn-registrar"
+                        onclick="App.registrar()">
+                    <span>Crear mi cuenta gratis 🐔</span>
+                </button>
+            </form>
+
+            <!-- Demo rápido -->
+            <div class="login-separador">
+                <span>o</span>
+            </div>
+            <button class="btn-demo" onclick="App.loginDemo()">
+                🎯 Entrar en modo demo (sin cuenta)
+            </button>
+
+        </div>
+    </div>
+
+
+    <!-- PANTALLA DE ESTADO (pendiente de aprobación / vencido) -->
+    <div id="pantalla-estado" class="screen hidden estado-espera-screen">
+        <div class="estado-espera-card">
+            <div class="estado-espera-icono">🐔</div>
+            <h2 class="estado-espera-titulo" id="estado-titulo">⏳ Cuenta pendiente</h2>
+            <p class="estado-espera-msg" id="estado-mensaje">
+                Tu cuenta fue creada correctamente.<br>El administrador debe aprobar tu acceso.
+            </p>
+            <button class="btn-secondary estado-espera-btn" id="estado-accion" onclick="location.reload()">
+                🔄 Reintentar
+            </button>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="app-principal" class="screen hidden">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <span class="top-bar-icon">🐔</span>
+                <div>
+                    <span class="top-bar-titulo" id="top-nombre-granja">Mi Granja</span>
+                    <span class="top-bar-fecha" id="top-fecha"></span>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <div class="nivel-badge" id="nivel-badge" title="Tu nivel actual">
+                    <span id="nivel-texto">Nv.1</span>
+                </div>
+                <button class="icon-btn" id="btn-notif" title="Alertas">
+                    🔔<span class="badge" id="badge-notif" style="display:none">!</span>
+                </button>
+                <button class="icon-btn" id="btn-perfil" title="Configuración" onclick="App.navegar('configuracion')">⚙️</button>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL (SPA) -->
+        <main class="contenido-principal" id="contenido-principal">
+            <!-- El router inyecta el módulo activo aquí -->
+        </main>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button class="nav-item active" data-tab="hoy">
+                <span class="nav-icon">☀️</span>
+                <span class="nav-label">HOY</span>
+            </button>
+            <button class="nav-item" data-tab="clientes">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">CLIENTES</span>
+            </button>
+            <button class="nav-item nav-item-fab" data-tab="produccion">
+                <span class="nav-icon-fab">✏️</span>
+                <span class="nav-label">CARGAR</span>
+            </button>
+            <button class="nav-item" data-tab="ventas">
+                <span class="nav-icon">💰</span>
+                <span class="nav-label">VENTAS</span>
+            </button>
+            <button class="nav-item" data-tab="plantel">
+                <span class="nav-icon">🐔</span>
+                <span class="nav-label">MÁS</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- MODAL GENÉRICO -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-card" id="modal-card">
+            <button class="modal-cerrar" id="modal-cerrar">✕</button>
+            <div id="modal-contenido"></div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <!-- MÓDULOS -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/modules/hoy.js"></script>
+    <script src="js/modules/granja.js"></script>
+    <script src="js/modules/produccion.js"></script>
+    <script src="js/modules/equipo.js"></script>
+    <script src="js/modules/redes.js"></script>
+    <script src="js/modules/ventas.js"></script>
+    <script src="js/modules/plantel.js"></script>
+    <script src="js/modules/configuracion.js"></script>
+    <script src="js/modules/inspeccion.js"></script>
+    <script src="js/modules/asistente.js"></script>
+    <script src="js/modules/contador_ia.js"></script>
+    <script src="js/modules/clientes.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Huevo de Oro Rivadavia — Manual del Sistema</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--vd:#0b1a0b;--vm:#142e14;--va:#4caf50;--do:#f4a900;--dc:#ffd54f;--tx:#f1f8e9;--ts:rgba(241,248,233,.6);--bg:rgba(255,255,255,.05);--bd:rgba(255,255,255,.09);--rd:#ef5350;--or:#ff7043;--mo:#ab47bc}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--vd);color:var(--tx);line-height:1.65}
+a{color:var(--va);text-decoration:none}
+
+/* PORTADA */
+.portada{min-height:100vh;background:linear-gradient(160deg,#0b1f0b 0%,#142a14 50%,#1a3a0d 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px;position:relative;overflow:hidden}
+.portada::before{content:'🐔';position:absolute;font-size:320px;opacity:.04;bottom:-40px;right:-40px;transform:rotate(-10deg)}
+.portada-logo{font-size:88px;filter:drop-shadow(0 8px 32px rgba(244,169,0,.6));margin-bottom:16px;animation:pulse 3s infinite}
+.portada h1{font-family:'Outfit',sans-serif;font-size:clamp(2rem,6vw,3.5rem);font-weight:800;color:var(--do);letter-spacing:-1px;line-height:1.1}
+.portada h2{font-size:clamp(1rem,3vw,1.4rem);font-weight:400;color:var(--ts);margin-top:12px}
+.portada-divider{width:80px;height:3px;background:linear-gradient(90deg,var(--va),var(--do));border-radius:99px;margin:28px auto}
+.portada-sub{font-size:.95rem;color:var(--ts);max-width:560px}
+.portada-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px}
+.portada-chip{background:rgba(255,255,255,.07);border:1px solid var(--bd);border-radius:99px;padding:6px 16px;font-size:.8rem;font-weight:600;color:var(--ts)}
+.portada-footer{position:absolute;bottom:24px;font-size:.75rem;color:var(--ts);opacity:.5}
+
+/* NAVEGACIÓN STICKY */
+.nav-manual{position:sticky;top:0;z-index:100;background:rgba(11,26,11,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nav-manual a{padding:14px 16px;font-size:.78rem;font-weight:600;color:var(--ts);white-space:nowrap;transition:color .2s;border-bottom:2px solid transparent}
+.nav-manual a:hover{color:var(--va);border-bottom-color:var(--va)}
+::-webkit-scrollbar{height:3px;width:0}
+::-webkit-scrollbar-thumb{background:var(--va);border-radius:99px}
+
+/* CONTENIDO */
+.contenido{max-width:960px;margin:0 auto;padding:48px 24px 80px}
+
+/* SECCIONES */
+.seccion{margin-bottom:72px;scroll-margin-top:60px}
+.seccion-header{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+.seccion-icono{font-size:2.4rem;filter:drop-shadow(0 4px 12px rgba(76,175,80,.4))}
+.seccion-titulo{font-family:'Outfit',sans-serif;font-size:clamp(1.5rem,4vw,2rem);font-weight:800;color:var(--tx)}
+.seccion-subtitulo{font-size:.9rem;color:var(--ts);margin-top:2px}
+.seccion-divider{height:2px;background:linear-gradient(90deg,var(--va),transparent);border-radius:99px;margin-bottom:28px}
+
+/* MÓDULO LAYOUT — dos columnas */
+.modulo-layout{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.modulo-layout.reverse{direction:rtl}
+.modulo-layout.reverse > *{direction:ltr}
+@media(max-width:720px){.modulo-layout,.modulo-layout.reverse{grid-template-columns:1fr}}
+
+/* CAPTURA DE PANTALLA */
+.captura-wrap{position:relative}
+.captura-img{width:100%;max-width:300px;border-radius:24px;box-shadow:0 12px 48px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);display:block;margin:0 auto}
+.captura-label{text-align:center;font-size:.72rem;color:var(--ts);margin-top:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* CARDS DE FUNCIONES */
+.func-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
+.func-card{background:var(--bg);border:1px solid var(--bd);border-radius:16px;padding:18px;transition:background .2s}
+.func-card:hover{background:rgba(255,255,255,.08)}
+.func-icono{font-size:1.6rem;margin-bottom:8px}
+.func-titulo{font-weight:700;font-size:.92rem;margin-bottom:4px}
+.func-desc{font-size:.8rem;color:var(--ts);line-height:1.5}
+
+/* TABLA */
+.tabla-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse;background:var(--bg)}
+th{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ts);padding:12px 16px;text-align:left;background:rgba(0,0,0,.2)}
+td{font-size:.85rem;padding:12px 16px;border-top:1px solid var(--bd);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.03)}
+
+/* CHIPS */
+.chip{display:inline-block;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase}
+.chip.v{background:rgba(76,175,80,.2);color:#81c784}
+.chip.a{background:rgba(255,193,7,.2);color:#ffd54f}
+.chip.r{background:rgba(239,83,80,.2);color:#ef9a9a}
+.chip.b{background:rgba(66,165,245,.2);color:#90caf9}
+.chip.p{background:rgba(171,71,188,.2);color:#ce93d8}
+
+/* ALERTA */
+.alerta{border-radius:14px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;margin:16px 0}
+.alerta.v{background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3)}
+.alerta.a{background:rgba(255,193,7,.1);border:1px solid rgba(255,193,7,.3)}
+.alerta.r{background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3)}
+.alerta.i{background:rgba(66,165,245,.1);border:1px solid rgba(66,165,245,.3)}
+.alerta-icono{font-size:1.5rem;flex-shrink:0;margin-top:1px}
+.alerta-texto b{display:block;font-weight:700;margin-bottom:3px;font-size:.9rem}
+.alerta-texto{font-size:.83rem;color:var(--ts);line-height:1.5}
+
+/* PASO A PASO */
+.pasos{display:flex;flex-direction:column;gap:14px;margin-top:16px}
+.paso{display:flex;gap:14px;align-items:flex-start}
+.paso-num{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--va),#2e7d32);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;box-shadow:0 4px 12px rgba(76,175,80,.3)}
+.paso-contenido b{display:block;font-weight:700;font-size:.9rem}
+.paso-contenido{font-size:.82rem;color:var(--ts);line-height:1.5;padding-top:5px}
+
+/* SEMÁFORO */
+.semaforos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+.sem{border-radius:14px;padding:16px;text-align:center;border:2px solid}
+.sem.g{background:rgba(76,175,80,.1);border-color:var(--va)}
+.sem.a{background:rgba(255,193,7,.1);border-color:#ffc107}
+.sem.r{background:rgba(239,83,80,.1);border-color:var(--rd)}
+.sem .sv{font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;display:block}
+.sem .sl{font-size:.7rem;color:var(--ts);margin-top:4px}
+.sem .sr{font-size:.75rem;font-weight:600;margin-top:3px}
+
+/* AGENTES */
+.agentes-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:600px){.agentes-grid{grid-template-columns:1fr}}
+.agente-card{border-radius:16px;padding:20px;border:1px solid}
+.agente-card.vet{background:rgba(76,175,80,.08);border-color:rgba(76,175,80,.25)}
+.agente-card.cont{background:rgba(255,193,7,.08);border-color:rgba(255,193,7,.25)}
+.agente-card.grow{background:rgba(66,165,245,.08);border-color:rgba(66,165,245,.25)}
+.agente-card.aud{background:rgba(239,83,80,.08);border-color:rgba(239,83,80,.25)}
+.agente-nombre{font-weight:800;font-size:1rem;margin:8px 0 4px}
+.agente-rol{font-size:.72rem;color:var(--ts);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
+.agente-items{list-style:none;display:flex;flex-direction:column;gap:5px}
+.agente-items li{font-size:.8rem;color:var(--ts);display:flex;gap:8px;align-items:flex-start}
+
+/* PLAN */
+.plan-fases{display:flex;flex-direction:column;gap:10px}
+.fase{display:flex;gap:16px;align-items:center;padding:14px 18px;background:var(--bg);border:1px solid var(--bd);border-radius:12px}
+.fase-num{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:var(--do);min-width:28px}
+.fase-info b{display:block;font-weight:700;font-size:.9rem}
+.fase-info{font-size:.8rem;color:var(--ts)}
+.fase-tiempo{margin-left:auto;font-size:.75rem;font-weight:700;color:var(--va);white-space:nowrap}
+.fase.hecho .fase-num{color:var(--va)}
+.fase.hecho{border-color:rgba(76,175,80,.2)}
+
+/* FOOTER */
+.footer-doc{text-align:center;padding:48px 24px;border-top:1px solid var(--bd);color:var(--ts);font-size:.82rem}
+.footer-doc .logo{font-size:2rem;display:block;margin-bottom:8px}
+
+/* ANIMACIONES */
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<section class="portada">
+  <div class="portada-logo">🥚</div>
+  <h1>Huevo de Oro<br>Rivadavia</h1>
+  <h2>Sistema de Gestión Avícola — Propuesta Completa</h2>
+  <div class="portada-divider"></div>
+  <p class="portada-sub">Una solución digital integral para transformar su establecimiento familiar en una operación de alta eficiencia, con inteligencia artificial aplicada a la producción avícola de Mendoza.</p>
+  <div class="portada-chips">
+    <span class="portada-chip">📍 Rivadavia, Mendoza</span>
+    <span class="portada-chip">🐔 Gallinas Ponedoras</span>
+    <span class="portada-chip">🤖 Inteligencia Artificial</span>
+    <span class="portada-chip">📱 App en el celular</span>
+    <span class="portada-chip">🔒 Sin costo hasta confirmar</span>
+  </div>
+  <p class="portada-footer">Desarrollado por Antigravity · Mendoza, Argentina · 2026</p>
+</section>
+
+<!-- NAVEGACIÓN -->
+<nav class="nav-manual">
+  <a href="#perfiles">👥 Perfiles</a>
+  <a href="#registro">📝 Registro</a>
+  <a href="#conteo">📸 Conteo IA</a>
+  <a href="#costos">💰 Costos</a>
+  <a href="#clientes">🗺️ Clientes</a>
+  <a href="#sanitario">💉 Sanidad</a>
+  <a href="#zonda">🌡️ Zonda</a>
+  <a href="#panel">📊 Panel Admin</a>
+  <a href="#agentes">🤖 Agentes IA</a>
+  <a href="#plan">📅 Plan</a>
+</nav>
+
+<main class="contenido">
+
+  <!-- INTRO -->
+  <section class="seccion" id="intro">
+    <div class="alerta i">
+      <span class="alerta-icono">💡</span>
+      <div class="alerta-texto">
+        <b>¿Qué es este sistema?</b>
+        Una aplicación que funciona en el celular sin necesidad de instalar nada. Permite gestionar toda la operación avícola — producción diaria, costos, clientes, vacunas y cobros — en un solo lugar, con datos en tiempo real. <b>Funciona sin internet</b> dentro del galpón y se sincroniza automáticamente cuando vuelve la señal.
+      </div>
+    </div>
+  </section>
+
+  <!-- PERFILES -->
+  <section class="seccion" id="perfiles">
+    <div class="seccion-header">
+      <span class="seccion-icono">👥</span>
+      <div>
+        <div class="seccion-titulo">Perfiles de Usuario</div>
+        <div class="seccion-subtitulo">Cada miembro de la familia tiene su acceso personalizado</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="tabla-wrap">
+      <table>
+        <thead><tr><th>Perfil</th><th>¿Quién lo usa?</th><th>¿Qué puede hacer?</th></tr></thead>
+        <tbody>
+          <tr><td><b>Administrador</b> <span class="chip v">Admin</span></td><td>Padre / dueño del establecimiento</td><td>Acceso total: reportes, costos, precios, cobranzas, configuración</td></tr>
+          <tr><td><b>Operador</b> <span class="chip b">Operador</span></td><td>Encargado adulto</td><td>Registro de campo, ventas, gestión de clientes y pedidos</td></tr>
+          <tr><td><b>Junior</b> <span class="chip a">Junior</span></td><td>Hijo adolescente</td><td>Solo carga los datos del día: huevos, alimento y mortalidad</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- REGISTRO DIARIO -->
+  <section class="seccion" id="registro">
+    <div class="seccion-header">
+      <span class="seccion-icono">📝</span>
+      <div>
+        <div class="seccion-titulo">Módulo 1 — Registro de Campo</div>
+        <div class="seccion-subtitulo">El corazón del sistema. Se usa todos los días en el galpón</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="modulo-layout">
+      <div>
+        <p style="font-size:.88rem;color:var(--ts);margin-bottom:16px">Un formulario de <b>3 pasos simples</b>, diseñado para usar con una mano y sin equivocarse. En menos de 2 minutos queda registrado el día completo.</p>
+        <div class="pasos">
+          <div class="paso"><div class="paso-num">1</div><div class="paso-contenido"><b>Elegís el galpón</b>Galpón A o Galpón B, con un tap.</div></div>
+          <div class="paso"><div class="paso-num">2</div><div class="paso-contenido"><b>Cargás los números</b>Huevos producidos, mortalidad, alimento en kg, agua, temperatura del día.</div></div>
+          <div class="paso"><div class="paso-num">3</div><div class="paso-contenido"><b>Confirmás</b>Un tap y listo. El sistema calcula el FCR automáticamente y avisa si algo está fuera de lo normal.</div></div>
+        </div>
+        <div class="alerta r" style="margin-top:16px">
+          <span class="alerta-icono">🔴</span>
+          <div class="alerta-texto"><b>Alerta automática</b>Si la postura cae más del 10% respecto al día anterior, el administrador recibe una notificación al instante.</div>
+        </div>
+      </div>
+      <div class="captura-wrap">
+        <img src="img_registros.png" alt="Pantalla de Registros" class="captura-img">
+        <p class="captura-label">Pantalla de Registros Diarios</p>
+      </div>
+    </div>
+    <div class="func-grid" style="margin-top:24px">
+      <div class="func-card"><div class="func-icono">🥚</div><div class="func-titulo">Huevos producidos</div><div class="func-desc">Total del día diferenciando producción completa, rotos y descarte.</div></div>
+      <div class="func-card"><div class="func-icono">🌾</div><div class="func-titulo">Alimento en kg</div><div class="func-desc">Consumo diario de balanceado. El sistema calcula el FCR automáticamente.</div></div>
+      <div class="func-card"><div class="func-icono">💧</div><div class="func-titulo">Agua en litros</div><div class="func-desc">Control de consumo de agua, clave para detectar anomalías sanitarias.</div></div>
+      <div class="func-card"><div class="func-icono">🌡️</div><div class="func-titulo">Temperatura máxima</div><div class="func-desc">Si supera 32°C, activa automáticamente el Protocolo Zonda.</div></div>
+    </div>
+  </section>
+
+  <!-- CONTEO IA -->
+  <section class="seccion" id="conteo">
+    <div class="seccion-header">
+      <span class="seccion-icono">📸</span>
+      <div>
+        <div class="seccion-titulo">Módulo 2 — Conteo por Fotografía IA</div>
+        <div class="seccion-subtitulo">La función más innovadora. Única en el mercado avícola regional</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="modulo-layout reverse">
+      <div>
+        <div class="alerta i">
+          <span class="alerta-icono">🤖</span>
+          <div class="alerta-texto"><b>Inteligencia Artificial (Gemini Vision)</b>El operador saca una foto con el celular y la IA analiza la imagen y cuenta automáticamente lo que hay en ella en menos de 3 segundos.</div>
+        </div>
+        <div class="func-grid" style="margin-top:16px">
+          <div class="func-card"><div class="func-icono">🥚</div><div class="func-titulo">Huevos</div><div class="func-desc">En cinta transportadora o en el nidal antes de recolectar.</div></div>
+          <div class="func-card"><div class="func-icono">🐔</div><div class="func-titulo">Gallinas</div><div class="func-desc">Censo rápido del lote para verificar bajas.</div></div>
+          <div class="func-card"><div class="func-icono">📦</div><div class="func-titulo">Maples</div><div class="func-desc">Stock en depósito. Nunca más contar a mano.</div></div>
+        </div>
+        <div class="alerta r" style="margin-top:16px">
+          <span class="alerta-icono">🚨</span>
+          <div class="alerta-texto"><b>Auditoría automática incorporada</b>Si el conteo de la IA difiere del conteo manual en más del 5%, el sistema genera una alerta para que el administrador revise. Detecta errores y evita pérdidas ocultas.</div>
+        </div>
+      </div>
+      <div class="captura-wrap">
+        <img src="img_conteo.png" alt="Pantalla de Conteo IA" class="captura-img">
+        <p class="captura-label">Pantalla de Conteo por Fotografía IA</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COSTOS -->
+  <section class="seccion" id="costos">
+    <div class="seccion-header">
+      <span class="seccion-icono">💰</span>
+      <div>
+        <div class="seccion-titulo">Módulo 3 — Motor de Costos Dinámico</div>
+        <div class="seccion-subtitulo">Siempre saber si el negocio es rentable, sin hacer una sola cuenta</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <p style="font-size:.88rem;color:var(--ts);margin-bottom:16px">El sistema calcula automáticamente el <b>costo real de producir una docena</b> usando los precios actuales de la zona: alimento, flete desde zona núcleo, mano de obra, amortización de aves y gastos operativos.</p>
+    <div class="semaforos">
+      <div class="sem g"><span style="font-size:2rem">🟢</span><span class="sv">+40%</span><span class="sl">Margen</span><span class="sr" style="color:var(--va)">Rentable</span></div>
+      <div class="sem a"><span style="font-size:2rem">🟡</span><span class="sv">20–40%</span><span class="sl">Margen</span><span class="sr" style="color:#ffd54f">Cuidado</span></div>
+      <div class="sem r"><span style="font-size:2rem">🔴</span><span class="sv">&lt;20%</span><span class="sl">Margen</span><span class="sr" style="color:var(--rd)">Revisar</span></div>
+    </div>
+    <div class="func-grid" style="margin-top:16px">
+      <div class="func-card"><div class="func-icono">📉</div><div class="func-titulo">Costo/docena en tiempo real</div><div class="func-desc">Actualizado cada vez que se registra una carga de alimento o se modifica un precio.</div></div>
+      <div class="func-card"><div class="func-icono">📊</div><div class="func-titulo">Punto de equilibrio</div><div class="func-desc">Cuántas docenas hay que vender por mes para cubrir todos los costos fijos.</div></div>
+      <div class="func-card"><div class="func-icono">💲</div><div class="func-titulo">Precio de venta sugerido</div><div class="func-desc">Calculado para mantener el margen objetivo que configure el administrador.</div></div>
+      <div class="func-card"><div class="func-icono">📅</div><div class="func-titulo">Historial de costos</div><div class="func-desc">Evolución del costo/docena en los últimos 3 meses para detectar tendencias.</div></div>
+    </div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section class="seccion" id="clientes">
+    <div class="seccion-header">
+      <span class="seccion-icono">🗺️</span>
+      <div>
+        <div class="seccion-titulo">Módulo 4 — CRM de Clientes y Ventas</div>
+        <div class="seccion-subtitulo">Del pedido al cobro, todo en un solo flujo</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="modulo-layout">
+      <div>
+        <p style="font-size:.88rem;color:var(--ts);margin-bottom:16px">Gestión completa del ciclo de ventas en Rivadavia, Junín y San Martín:</p>
+        <div class="pasos">
+          <div class="paso"><div class="paso-num">1</div><div class="paso-contenido"><b>El cliente hace el pedido</b>Se registra en el sistema (en persona, por teléfono o por WhatsApp).</div></div>
+          <div class="paso"><div class="paso-num">2</div><div class="paso-contenido"><b>Se confirma y prepara</b>El sistema muestra pedidos pendientes ordenados por zona de reparto.</div></div>
+          <div class="paso"><div class="paso-num">3</div><div class="paso-contenido"><b>Entrega con remito digital</b>Quedan registradas las docenas y los maples entregados.</div></div>
+          <div class="paso"><div class="paso-num">4</div><div class="paso-contenido"><b>Se registra el cobro</b>Efectivo, transferencia o MercadoPago. El saldo del cliente se actualiza solo.</div></div>
+        </div>
+        <div class="alerta v" style="margin-top:16px">
+          <span class="alerta-icono">💬</span>
+          <div class="alerta-texto"><b>WhatsApp con un tap</b>El sistema envía mensajes personalizados al instante: pedido listo, recordatorio de pago, devolución de maples — sin escribir nada a mano.</div>
+        </div>
+      </div>
+      <div class="captura-wrap">
+        <img src="img_clientes.png" alt="Pantalla de Clientes" class="captura-img">
+        <p class="captura-label">Pantalla de Clientes y CRM</p>
+      </div>
+    </div>
+    <div class="func-grid" style="margin-top:24px">
+      <div class="func-card"><div class="func-icono">📍</div><div class="func-titulo">Mapa de clientes</div><div class="func-desc">Pins en el mapa por zona. Clic en un pin para ver el historial y el saldo.</div></div>
+      <div class="func-card"><div class="func-icono">🚚</div><div class="func-titulo">Ruta de reparto óptima</div><div class="func-desc">El sistema calcula el orden de visita del día para ahorrar combustible hasta 40%.</div></div>
+      <div class="func-card"><div class="func-icono">🗂️</div><div class="func-titulo">Control de maples</div><div class="func-desc">Cada cliente tiene su cuenta exacta de maples entregados vs devueltos.</div></div>
+      <div class="func-card"><div class="func-icono">💳</div><div class="func-titulo">Cuentas por cobrar</div><div class="func-desc">Vista de todos los saldos pendientes con días de antigüedad de cada deuda.</div></div>
+    </div>
+  </section>
+
+  <!-- SANITARIO -->
+  <section class="seccion" id="sanitario">
+    <div class="seccion-header">
+      <span class="seccion-icono">💉</span>
+      <div>
+        <div class="seccion-titulo">Módulo 5 — Calendario Sanitario</div>
+        <div class="seccion-subtitulo">Nunca más olvidarse de una vacuna ni del RENSPA</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="modulo-layout reverse">
+      <div>
+        <p style="font-size:.88rem;color:var(--ts);margin-bottom:16px">Al registrar un lote nuevo, el sistema genera automáticamente el <b>calendario de vacunación completo</b> según los protocolos SENASA para la raza indicada.</p>
+        <div class="tabla-wrap">
+          <table>
+            <thead><tr><th>Vacuna</th><th>Cuándo</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>Marek</td><td>Al ingreso (1 día)</td><td><span class="chip v">Automático</span></td></tr>
+              <tr><td>Gumboro</td><td>Semana 2 y 4</td><td><span class="chip v">Automático</span></td></tr>
+              <tr><td>Newcastle</td><td>Sem. 6, 12 y cada 3 meses</td><td><span class="chip v">Automático</span></td></tr>
+              <tr><td>Bronquitis IB</td><td>Semana 8 y reactivaciones</td><td><span class="chip v">Automático</span></td></tr>
+              <tr><td>Coriza</td><td>Según zona de riesgo</td><td><span class="chip a">Manual</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="alerta a" style="margin-top:16px">
+          <span class="alerta-icono">⏰</span>
+          <div class="alerta-texto"><b>Alertas de vencimiento</b>14 días antes: aviso en la app. 7 días antes: notificación urgente al administrador y al veterinario por WhatsApp.</div>
+        </div>
+      </div>
+      <div class="captura-wrap">
+        <img src="img_sanitario.png" alt="Pantalla Sanitario" class="captura-img">
+        <p class="captura-label">Pantalla Calendario Sanitario</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ZONDA -->
+  <section class="seccion" id="zonda">
+    <div class="seccion-header">
+      <span class="seccion-icono">🌡️</span>
+      <div>
+        <div class="seccion-titulo">Módulo 6 — Protocolo Zonda / Estrés Térmico</div>
+        <div class="seccion-subtitulo">Específico para el clima de Mendoza. No existe en ningún otro sistema avícola</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="func-grid">
+      <div class="func-card" style="border-color:rgba(255,193,7,.3)">
+        <div class="func-icono">🟡</div>
+        <div class="func-titulo">Alerta Amarilla — 32 a 35°C</div>
+        <div class="func-desc">Aumentar frecuencia de agua fría a cada 2 horas. Abrir ventilaciones laterales. Evitar manejo de aves entre 12 y 16 hs.</div>
+      </div>
+      <div class="func-card" style="border-color:rgba(239,83,80,.3)">
+        <div class="func-icono">🔴</div>
+        <div class="func-titulo">Alerta Roja — más de 35°C</div>
+        <div class="func-desc">Activar ventiladores de emergencia. Agregar electrolitos al agua. Monitorear mortalidad cada 2 horas. Notificar al veterinario.</div>
+      </div>
+      <div class="func-card">
+        <div class="func-icono">📈</div>
+        <div class="func-titulo">Correlación histórica</div>
+        <div class="func-desc">El sistema muestra el impacto de cada episodio de calor en la producción y la pérdida de docenas estimada.</div>
+      </div>
+      <div class="func-card">
+        <div class="func-icono">📲</div>
+        <div class="func-titulo">Notificación automática</div>
+        <div class="func-desc">Cuando se supera el umbral, el administrador recibe instrucciones en WhatsApp sin necesidad de abrir la app.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL ADMIN -->
+  <section class="seccion" id="panel">
+    <div class="seccion-header">
+      <span class="seccion-icono">📊</span>
+      <div>
+        <div class="seccion-titulo">Módulo 7 — Panel del Administrador</div>
+        <div class="seccion-subtitulo">Todo el establecimiento en una sola pantalla</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="modulo-layout">
+      <div>
+        <div class="func-grid">
+          <div class="func-card"><div class="func-icono">📦</div><div class="func-titulo">Producción en tiempo real</div><div class="func-desc">Docenas del día, la semana y el mes con tendencia comparativa.</div></div>
+          <div class="func-card"><div class="func-icono">💰</div><div class="func-titulo">Ingresos y márgenes</div><div class="func-desc">Total vendido, cobrado y pendiente de cobro con detalle por cliente.</div></div>
+        </div>
+        <div class="alerta r" style="margin-top:16px">
+          <span class="alerta-icono">🔍</span>
+          <div class="alerta-texto">
+            <b>Auditor IA — Sistema Anti-Fugas</b>
+            El sistema cruza todos los datos automáticamente y alerta si algo no cierra:<br><br>
+            🥚 <b>Producción vs Ventas:</b> huevos que "desaparecen"<br>
+            🌾 <b>Alimento vs Postura:</b> consumo anormal (FCR elevado)<br>
+            💳 <b>Ventas vs Cobros:</b> facturas sin cobrar vencidas<br>
+            📦 <b>Maples:</b> entregados vs devueltos por cliente<br>
+            📸 <b>Foto IA vs Manual:</b> diferencias superiores al 5%
+          </div>
+        </div>
+        <div class="alerta v" style="margin-top:12px">
+          <span class="alerta-icono">📤</span>
+          <div class="alerta-texto"><b>Reporte Dominical Automático</b>Todos los domingos a las 8 AM, el administrador recibe por WhatsApp un resumen de la semana con producción, ingresos, márgenes y alertas pendientes.</div>
+        </div>
+      </div>
+      <div class="captura-wrap">
+        <img src="img_dashboard.png" alt="Panel del Administrador" class="captura-img">
+        <p class="captura-label">Panel Ejecutivo del Administrador</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENTES IA -->
+  <section class="seccion" id="agentes">
+    <div class="seccion-header">
+      <span class="seccion-icono">🤖</span>
+      <div>
+        <div class="seccion-titulo">Equipo de Agentes de Inteligencia Artificial</div>
+        <div class="seccion-subtitulo">Cuatro consultores digitales que trabajan 24/7 analizando los datos</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="agentes-grid">
+      <div class="agente-card vet">
+        <div style="font-size:2rem">🩺</div>
+        <div class="agente-nombre">Agente Veterinario</div>
+        <div class="agente-rol">Sanidad Avícola · SENASA</div>
+        <ul class="agente-items">
+          <li>✔ Genera el calendario de vacunas automáticamente al registrar un lote</li>
+          <li>✔ Detecta caídas de postura fuera de la curva esperada para la semana del lote</li>
+          <li>✔ Alerta cuando a la mortalidad supera el 0,5% diario</li>
+          <li>✔ Recuerda renovar el RENSPA 60 días antes del vencimiento</li>
+        </ul>
+      </div>
+      <div class="agente-card cont">
+        <div style="font-size:2rem">⚖️</div>
+        <div class="agente-nombre">Agente Contable</div>
+        <div class="agente-rol">Costos · Punto de Equilibrio · AFIP</div>
+        <ul class="agente-items">
+          <li>✔ Calcula el costo/docena actualizado con precios reales de la zona núcleo</li>
+          <li>✔ Avisa cuando el precio de venta está por debajo del costo</li>
+          <li>✔ Controla las cuentas por cobrar vencidas</li>
+          <li>✔ Proyecta el resultado mensual en función del ritmo de producción</li>
+        </ul>
+      </div>
+      <div class="agente-card grow">
+        <div style="font-size:2rem">📣</div>
+        <div class="agente-nombre">Agente Comercial</div>
+        <div class="agente-rol">Ventas · WhatsApp · Rutas</div>
+        <ul class="agente-items">
+          <li>✔ Detecta clientes inactivos (+10 días sin pedido) y sugiere mensajes de reactivación</li>
+          <li>✔ Optimiza la ruta de reparto del día por zona</li>
+          <li>✔ Genera automáticamente mensajes de WhatsApp para cada situación</li>
+          <li>✔ Identifica qué clientes son más rentables y tienen mejor comportamiento de pago</li>
+        </ul>
+      </div>
+      <div class="agente-card aud">
+        <div style="font-size:2rem">🔍</div>
+        <div class="agente-nombre">Agente Auditor</div>
+        <div class="agente-rol">Control · Anti-Fugas · Trazabilidad</div>
+        <ul class="agente-items">
+          <li>✔ Cruza producción vs ventas para detectar huevos "desaparecidos"</li>
+          <li>✔ Verifica el FCR diario y alerta si el consumo de alimento es anormal</li>
+          <li>✔ Controla el stock de maples por cliente automáticamente</li>
+          <li>✔ Registra en log de auditoría quién hizo cada cambio y cuándo</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNCIONES EXTRA -->
+  <section class="seccion" id="extra">
+    <div class="seccion-header">
+      <span class="seccion-icono">✨</span>
+      <div>
+        <div class="seccion-titulo">Funciones Adicionales</div>
+        <div class="seccion-subtitulo">Valor agregado que diferencia el sistema</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="func-grid">
+      <div class="func-card" style="border-color:rgba(244,169,0,.3)">
+        <div class="func-icono">🏷️</div>
+        <div class="func-titulo">Etiqueta QR de Trazabilidad</div>
+        <div class="func-desc">Etiqueta imprimible con QR para cada maple. Muestra origen Rivadavia, fecha de postura, raza del lote y número RENSPA. El consumidor escanea y ve toda la información.</div>
+      </div>
+      <div class="func-card" style="border-color:rgba(171,71,188,.3)">
+        <div class="func-icono">📱</div>
+        <div class="func-titulo">Tablero Familiar</div>
+        <div class="func-desc">Una pantalla simple sin contraseña, accesible por QR desde cualquier celular. Muestra la producción del día, stock disponible y próxima vacuna en tiempo real.</div>
+      </div>
+      <div class="func-card">
+        <div class="func-icono">🔒</div>
+        <div class="func-titulo">Datos en la Nube Segura</div>
+        <div class="func-desc">Toda la información se guarda automáticamente en servidores certificados. Respaldo diario. Nunca se pierde un dato.</div>
+      </div>
+      <div class="func-card">
+        <div class="func-icono">📵</div>
+        <div class="func-titulo">Modo Sin Internet</div>
+        <div class="func-desc">El registro diario funciona sin señal dentro del galpón. Los datos se sincronizan automáticamente cuando vuelve la conexión.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAN -->
+  <section class="seccion" id="plan">
+    <div class="seccion-header">
+      <span class="seccion-icono">📅</span>
+      <div>
+        <div class="seccion-titulo">Plan de Implementación</div>
+        <div class="seccion-subtitulo">Sistema completo en producción en aproximadamente 5 semanas</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="plan-fases">
+      <div class="fase hecho"><div class="fase-num">✅</div><div class="fase-info"><b>Fase 1 — Demo funcional</b>Aplicación de demostración con 5 módulos interactivos para revisión del cliente.</div><div class="fase-tiempo">Listo</div></div>
+      <div class="fase"><div class="fase-num">2</div><div class="fase-info"><b>Fase 2 — Conexión a base de datos</b>Activación de Supabase, login real, guardado de datos en la nube y RLS por usuario.</div><div class="fase-tiempo">1 semana</div></div>
+      <div class="fase"><div class="fase-num">3</div><div class="fase-info"><b>Fase 3 — Módulo Ventas y Pedidos</b>Ciclo completo pedido → entrega → cobro con remito digital y saldo automático.</div><div class="fase-tiempo">1 semana</div></div>
+      <div class="fase"><div class="fase-num">4</div><div class="fase-info"><b>Fase 4 — Mapa y Rutas</b>Mapa interactivo de clientes con Leaflet y optimización de ruta de reparto por zona.</div><div class="fase-tiempo">3 días</div></div>
+      <div class="fase"><div class="fase-num">5</div><div class="fase-info"><b>Fase 5 — WhatsApp Automático</b>Reporte dominical y mensajes automáticos a clientes via API oficial de WhatsApp Business.</div><div class="fase-tiempo">3 días</div></div>
+      <div class="fase"><div class="fase-num">6</div><div class="fase-info"><b>Fase 6 — Conteo IA Real</b>Conexión real con Gemini Vision para análisis de fotos. Auditoría automática de conteos.</div><div class="fase-tiempo">1 semana</div></div>
+      <div class="fase"><div class="fase-num">7</div><div class="fase-info"><b>Fase 7 — QR y Tablero Familiar</b>Etiquetas trazabilidad imprimibles y pantalla pública para la familia.</div><div class="fase-tiempo">3 días</div></div>
+    </div>
+    <div class="alerta i" style="margin-top:20px">
+      <span class="alerta-icono">ℹ️</span>
+      <div class="alerta-texto"><b>Sin costo hasta confirmar</b>La Fase 1 (demo completo) está desarrollada y no genera ningún gasto. Los costos de hosting y servicios comenzarán recién a partir de la Fase 2, una vez que el cliente confirme avanzar.</div>
+    </div>
+  </section>
+
+  <!-- SOPORTE -->
+  <section class="seccion">
+    <div class="seccion-header">
+      <span class="seccion-icono">🤝</span>
+      <div>
+        <div class="seccion-titulo">Capacitación y Soporte</div>
+        <div class="seccion-subtitulo">Incluido en el proyecto</div>
+      </div>
+    </div>
+    <div class="seccion-divider"></div>
+    <div class="func-grid">
+      <div class="func-card"><div class="func-icono">📖</div><div class="func-titulo">Manual "3 Clicks"</div><div class="func-desc">Guía ilustrada para cada operación cotidiana, pensada para que cualquier miembro de la familia la entienda.</div></div>
+      <div class="func-card"><div class="func-icono">🎬</div><div class="func-titulo">Video tutorial</div><div class="func-desc">Video de 5 minutos para el operador junior mostrando paso a paso la carga diaria.</div></div>
+      <div class="func-card"><div class="func-icono">🏠</div><div class="func-titulo">Capacitación familiar</div><div class="func-desc">Sesión de 2 horas con toda la familia, presencial en Rivadavia o por videollamada.</div></div>
+      <div class="func-card"><div class="func-icono">💬</div><div class="func-titulo">Soporte por WhatsApp</div><div class="func-desc">Asistencia directa durante los primeros 30 días de uso del sistema en producción.</div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer-doc">
+  <span class="logo">🥚</span>
+  <strong>Huevo de Oro Rivadavia</strong><br>
+  Sistema de Gestión Avícola — Propuesta Comercial Confidencial<br><br>
+  <span style="opacity:.5">Desarrollado por Antigravity · Mendoza, Argentina · 2026<br>
+  Tecnologías: Progressive Web App · Supabase · Google Gemini AI · WhatsApp Business API</span>
+</footer>
+
+</body>
+</html>

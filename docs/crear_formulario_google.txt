@@ -1,0 +1,127 @@
+function crearFormularioDiagnostico() {
+  var form = FormApp.create('Diagnóstico Integral de Granja de Gallinas Ponedoras');
+  form.setDescription('Este formulario nos ayudará a entender cómo funciona la granja para mejorar la producción, organización familiar y ventas.');
+  form.setCollectEmail(false);
+  form.setAllowResponseEdits(true);
+
+  form.addSectionHeaderItem().setTitle('🧠 SECCIÓN 1 — DATOS GENERALES');
+  form.addTextItem().setTitle('1. Nombre de la granja').setRequired(true);
+  form.addTextItem().setTitle('2. Ubicación').setRequired(true);
+  form.addMultipleChoiceItem().setTitle('3. ¿Hace cuánto trabajan en la actividad?').setChoiceValues(['Menos de 1 año', '1 a 3 años', 'Más de 3 años']).setRequired(true);
+  form.addMultipleChoiceItem().setTitle('4. ¿Es una actividad principal o secundaria?').setChoiceValues(['Principal', 'Secundaria']).setRequired(true);
+  form.addParagraphTextItem().setTitle('5. ¿Quiénes trabajan en la granja? (nombre, edad y rol)');
+
+  form.addSectionHeaderItem().setTitle('🐔 SECCIÓN 2 — ESTRUCTURA DEL PLANTEL');
+  form.addTextItem().setTitle('6. ¿Cuántas gallinas tienen en total?').setRequired(true);
+  form.addTextItem().setTitle('7. ¿Cuántas gallinas están en producción?').setHelpText('Las que están poniendo huevos actualmente');
+  form.addTextItem().setTitle('8. ¿Cuántas gallinas están en recría?').setHelpText('Aún no producen');
+  form.addTextItem().setTitle('9. ¿Cuántas gallinas están en baja o descarte?').setHelpText('Producen poco o están por retirarse');
+  form.addTextItem().setTitle('10. Edad promedio de gallinas en producción');
+  form.addTextItem().setTitle('11. Edad de gallinas jóvenes');
+  form.addMultipleChoiceItem().setTitle('12. ¿Trabajan con lotes?').setChoiceValues(['Sí', 'No']);
+  form.addTextItem().setTitle('13. ¿Cada cuánto renuevan gallinas?');
+
+  form.addSectionHeaderItem().setTitle('📊 SECCIÓN 3 — PRODUCCIÓN');
+  form.addTextItem().setTitle('14. ¿Cuántos huevos producen por día?');
+  form.addTextItem().setTitle('15. ¿Cuántos maples producen por semana?').setHelpText('1 maple = 30 huevos');
+  form.addTextItem().setTitle('16. ¿Huevos rotos o descartes?');
+  form.addMultipleChoiceItem().setTitle('17. ¿Cómo estiman la producción?').setChoiceValues(['No la miden', 'A ojo', 'Con registros']);
+
+  form.addSectionHeaderItem().setTitle('🏠 SECCIÓN 4 — SISTEMA DE PRODUCCIÓN');
+  form.addMultipleChoiceItem().setTitle('18. Tipo de sistema').setChoiceValues(['Jaula', 'Piso (sin jaulas)', 'Semi libre', 'Libre con acceso al exterior']);
+  form.addMultipleChoiceItem().setTitle('19. ¿Las gallinas salen al campo?').setChoiceValues(['Sí', 'No']);
+  form.addTextItem().setTitle('20. Tipo de alimento');
+  form.addMultipleChoiceItem().setTitle('21. ¿Cómo alimentan?').setChoiceValues(['Manual', 'Automático', 'Mixto']);
+
+  form.addSectionHeaderItem().setTitle('💧 SECCIÓN 5 — AGUA');
+  form.addTextItem().setTitle('22. Origen del agua');
+  form.addMultipleChoiceItem().setTitle('23. ¿Tienen tanque?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('24. ¿Cómo distribuyen el agua?');
+  form.addMultipleChoiceItem().setTitle('25. ¿Problemas de agua?').setChoiceValues(['Nunca', 'A veces', 'Frecuente']);
+  form.addParagraphTextItem().setTitle('26. ¿Qué problemas?');
+  form.addMultipleChoiceItem().setTitle('27. ¿Controlan consumo?').setChoiceValues(['Sí', 'No']);
+  form.addTextItem().setTitle('28. ¿Cada cuánto limpian bebederos?');
+
+  form.addSectionHeaderItem().setTitle('🦠 SECCIÓN 6 — SANIDAD');
+  form.addMultipleChoiceItem().setTitle('29. ¿Registran mortandad?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('30. Problemas sanitarios principales');
+  form.addMultipleChoiceItem().setTitle('31. ¿Tienen rutina de limpieza?').setChoiceValues(['Sí', 'No']);
+  form.addTextItem().setTitle('32. ¿Cada cuánto limpian galpones?');
+  form.addMultipleChoiceItem().setTitle('33. ¿Tienen zonas separadas (limpio/sucio)?').setChoiceValues(['Sí', 'No']);
+  form.addMultipleChoiceItem().setTitle('34. ¿Reciben visitas externas?').setChoiceValues(['Sí', 'No']);
+
+  form.addSectionHeaderItem().setTitle('🧰 SECCIÓN 7 — INFRAESTRUCTURA');
+  form.addMultipleChoiceItem().setTitle('35. Estado general de galpones').setChoiceValues(['Bueno', 'Regular', 'Malo']);
+  form.addParagraphTextItem().setTitle('36. Problemas de infraestructura');
+
+  form.addSectionHeaderItem().setTitle('📋 SECCIÓN 8 — ORGANIZACIÓN');
+  form.addTextItem().setTitle('37. ¿Quién hace la producción?');
+  form.addTextItem().setTitle('38. ¿Quién controla los números?');
+  form.addTextItem().setTitle('39. ¿Quién toma decisiones?');
+  form.addMultipleChoiceItem().setTitle('40. ¿Los chicos participan?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('41. ¿En qué participan?');
+  form.addMultipleChoiceItem().setTitle('42. ¿Cómo se organizan?').setChoiceValues(['Memoria', 'Cuaderno', 'Excel', 'Otro']);
+  form.addParagraphTextItem().setTitle('43. ¿Qué tareas se olvidan más seguido?');
+
+  form.addSectionHeaderItem().setTitle('📊 SECCIÓN 9 — REGISTRO');
+  form.addMultipleChoiceItem().setTitle('44. ¿Registran producción?').setChoiceValues(['Sí', 'No']);
+  form.addMultipleChoiceItem().setTitle('45. ¿Cómo registran?').setChoiceValues(['Papel', 'Excel', 'No registran']);
+  form.addMultipleChoiceItem().setTitle('46. ¿Les gustaría tener todo en el celular?').setChoiceValues(['Sí', 'No']);
+
+  form.addSectionHeaderItem().setTitle('📣 SECCIÓN 10 — VENTAS');
+  form.addCheckboxItem().setTitle('47. ¿Cómo venden?').setChoiceValues(['Directo', 'Comercios', 'Intermediarios']);
+  form.addTextItem().setTitle('48. Maples vendidos por semana');
+  form.addTextItem().setTitle('49. Precio por maple');
+  form.addMultipleChoiceItem().setTitle('50. ¿Tienen clientes fijos?').setChoiceValues(['Sí', 'No']);
+
+  form.addSectionHeaderItem().setTitle('📱 SECCIÓN 11 — REDES');
+  form.addMultipleChoiceItem().setTitle('51. ¿Usan redes?').setChoiceValues(['Sí', 'No']);
+  form.addCheckboxItem().setTitle('52. ¿Dónde publican?').setChoiceValues(['WhatsApp', 'Instagram', 'Facebook']);
+  form.addTextItem().setTitle('53. ¿Quién se encarga?');
+  form.addMultipleChoiceItem().setTitle('54. ¿Quieren vender más?').setChoiceValues(['Sí', 'No']);
+
+  form.addSectionHeaderItem().setTitle('💰 SECCIÓN 12 — NEGOCIO');
+  form.addMultipleChoiceItem().setTitle('55. ¿Saben el costo de producción?').setChoiceValues(['Sí', 'No']);
+  form.addMultipleChoiceItem().setTitle('56. ¿Quién define el precio?').setChoiceValues(['Nosotros', 'El mercado']);
+  form.addMultipleChoiceItem().setTitle('57. ¿Podrían vender más caro?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('58. ¿Qué les falta para vender mejor?');
+
+  form.addSectionHeaderItem().setTitle('📸 SECCIÓN 13 — INSPECCIÓN');
+  form.addMultipleChoiceItem().setTitle('59. ¿Cómo revisan la granja?').setChoiceValues(['A ojo', 'Rutina', 'No sistemático']);
+  form.addParagraphTextItem().setTitle('60. ¿Qué cosas se les pasan por alto?');
+  form.addMultipleChoiceItem().setTitle('61. ¿Les serviría una app que analice fotos?').setChoiceValues(['Sí', 'No']);
+
+  form.addSectionHeaderItem().setTitle('📸 SECCIÓN 14 — FOTOS (CLAVE)');
+  form.addParagraphTextItem().setTitle('Fotos de la granja — descripción y comentarios').setHelpText('Por favor describí cada área: Galpones · Interior · Bebederos · Comederos · Gallinas · Huevos · Almacenamiento · Problemas visibles');
+
+  form.addSectionHeaderItem().setTitle('👨‍👩‍👧‍👦 SECCIÓN 15 — PARTICIPACIÓN FAMILIAR');
+  form.addMultipleChoiceItem().setTitle('62. ¿Los hijos participan?').setChoiceValues(['Sí activamente', 'A veces', 'No']);
+  form.addMultipleChoiceItem().setTitle('63. ¿Qué interés tienen?').setChoiceValues(['Alto', 'Medio', 'Bajo', 'Ninguno']);
+  form.addMultipleChoiceItem().setTitle('64. ¿Usan redes o celular?').setChoiceValues(['Mucho', 'Normal', 'Poco']);
+  form.addMultipleChoiceItem().setTitle('65. ¿Podrían ayudar en redes o ventas?').setChoiceValues(['Sí', 'No']);
+  form.addMultipleChoiceItem().setTitle('66. ¿Te gustaría que participen más?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('67. ¿Por qué no participan más?');
+  form.addParagraphTextItem().setTitle('68. ¿En qué podrían ayudar más?');
+
+  form.addSectionHeaderItem().setTitle('🚀 SECCIÓN 16 — VISIÓN');
+  form.addMultipleChoiceItem().setTitle('69. ¿Quieren crecer?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('70. ¿Qué les gustaría mejorar?');
+  form.addParagraphTextItem().setTitle('71. ¿Cómo sería la granja ideal?');
+  form.addParagraphTextItem().setTitle('72. Problema más urgente');
+
+  form.addSectionHeaderItem().setTitle('🎯 SECCIÓN FINAL — VALIDACIÓN');
+  form.addMultipleChoiceItem().setTitle('73. ¿Usarían esta app?').setChoiceValues(['Sí', 'No']);
+  form.addParagraphTextItem().setTitle('74. ¿Qué usarían todos los días?');
+  form.addParagraphTextItem().setTitle('75. ¿Qué no usarían?');
+  form.addMultipleChoiceItem().setTitle('76. ¿Lo usaría la familia?').setChoiceValues(['Sí', 'No']);
+  form.addMultipleChoiceItem().setTitle('77. ¿Pagarían por esto?').setChoiceValues(['Sí', 'No']);
+
+  form.addSectionHeaderItem().setTitle('🔥 EXTRA FINAL');
+  form.addParagraphTextItem().setTitle('78. ¿Cuál es hoy el mayor problema de la granja?').setRequired(true);
+
+  var urlFormulario = form.getPublishedUrl();
+  var urlEdicion   = form.getEditUrl();
+  Logger.log('✅ FORMULARIO CREADO');
+  Logger.log('📋 URL para compartir: ' + urlFormulario);
+  Logger.log('✏️  URL de edición:    ' + urlEdicion);
+}

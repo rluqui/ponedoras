@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>🥚 Huevo de Oro · Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--vd:#0d1f0d;--vm:#1a3a1a;--va:#4caf50;--do:#f4a900;--tx:#f1f8e9;--ts:rgba(241,248,233,.55);--bg:rgba(255,255,255,.05);--bd:rgba(255,255,255,.09);--rd:#ef5350;--or:#ff7043;--r8:8px;--r12:12px;--r16:16px;--r24:24px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:var(--vd);color:var(--tx);min-height:100dvh;overflow-x:hidden}
+.hidden{display:none!important}
+/* TOPBAR */
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(13,31,13,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.topbar-brand{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:var(--do);display:flex;align-items:center;gap:8px}
+.topbar-kpis{display:flex;gap:12px}
+.tkpi{font-size:.72rem;text-align:center;color:var(--ts)}
+.tkpi b{display:block;font-size:1rem;font-weight:700;color:var(--do)}
+/* NAV */
+.bottomnav{position:fixed;bottom:0;left:0;right:0;height:64px;background:rgba(13,31,13,.97);backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;z-index:100}
+.navbtn{flex:1;background:none;border:none;color:rgba(241,248,233,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:.62rem;font-weight:600;transition:color .2s}
+.navbtn .ni{font-size:1.35rem;transition:transform .2s}
+.navbtn.active{color:var(--va)}
+.navbtn.active .ni{transform:translateY(-2px)}
+.navbtn.active::before{content:'';position:absolute;top:0;width:40px;height:2px;background:var(--va);border-radius:0 0 4px 4px}
+/* MAIN */
+.main{position:fixed;top:56px;bottom:64px;left:0;right:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{padding:16px;display:flex;flex-direction:column;gap:14px;animation:fiu .25s ease}
+.page-title{font-family:'Outfit',sans-serif;font-size:1.35rem;font-weight:800}
+/* CARDS KPI */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kcard{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r16);padding:14px;text-align:center}
+.kcard .v{font-family:'Outfit',sans-serif;font-size:1.9rem;font-weight:800;color:var(--do);line-height:1}
+.kcard .l{font-size:.68rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+.kcard .sub{font-size:.72rem;color:var(--ts);margin-top:2px}
+/* SEMAFORO */
+.semaf{border-radius:var(--r16);padding:16px;text-align:center;border:2px solid}
+.semaf.g{background:rgba(76,175,80,.12);border-color:var(--va)}
+.semaf.a{background:rgba(255,193,7,.12);border-color:#ffc107}
+.semaf.r{background:rgba(239,83,80,.12);border-color:var(--rd)}
+.semaf .sv{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;display:block}
+.semaf .sl{font-size:.8rem;color:var(--ts);margin-top:4px}
+/* TABLE */
+.card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r16);overflow:hidden}
+.card-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd)}
+.card-head h3{font-size:.95rem;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ts);padding:9px 14px;text-align:left;background:rgba(0,0,0,.2)}
+td{font-size:.82rem;padding:10px 14px;border-top:1px solid var(--bd);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.03)}
+/* CHIPS */
+.chip{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;text-transform:uppercase}
+.chip.g{background:rgba(76,175,80,.2);color:#81c784}
+.chip.a{background:rgba(255,193,7,.2);color:#ffd54f}
+.chip.r{background:rgba(239,83,80,.2);color:#ef9a9a}
+.chip.b{background:rgba(66,165,245,.2);color:#90caf9}
+.chip.p{background:rgba(171,71,188,.2);color:#ce93d8}
+/* BUTTONS */
+.btn{border:none;border-radius:var(--r8);cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-sm{font-size:.78rem;padding:7px 12px}
+.btn-md{font-size:.88rem;padding:11px 18px}
+.btn-verde{background:linear-gradient(135deg,var(--va),#388e3c);color:#fff;box-shadow:0 3px 12px rgba(76,175,80,.3)}
+.btn-verde:active{transform:scale(.97)}
+.btn-ghost{background:var(--bg);border:1px solid var(--bd);color:var(--tx)}
+.btn-rojo{background:rgba(239,83,80,.15);border:1px solid rgba(239,83,80,.3);color:#ef9a9a}
+/* MODAL */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fiu .2s}
+.modal{background:#162016;border:1px solid var(--bd);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;animation:slu .3s ease}
+.modal h2{font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:16px}
+.fgrp{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fgrp label{font-size:.72rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.3px}
+.fgrp input,.fgrp select,.fgrp textarea{background:rgba(255,255,255,.07);border:1px solid var(--bd);border-radius:var(--r8);color:var(--tx);font-family:'Inter',sans-serif;font-size:.9rem;padding:11px 13px;width:100%}
+.fgrp input:focus,.fgrp select:focus{outline:none;border-color:var(--va);background:rgba(255,255,255,.1)}
+.fgrp select option{background:#1a3a1a}
+.modal-footer{display:flex;gap:10px;margin-top:16px}
+/* FOTO CONTEO */
+.foto-drop{border:2px dashed rgba(76,175,80,.4);border-radius:var(--r16);padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.foto-drop:hover{border-color:var(--va);background:rgba(76,175,80,.06)}
+.foto-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.foto-drop .icn{font-size:48px;display:block;margin-bottom:8px}
+.conteo-box{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r16);padding:20px;text-align:center}
+.conteo-num{font-family:'Outfit',sans-serif;font-size:3.5rem;font-weight:800;color:var(--do);line-height:1}
+.conf-bar{height:6px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin:8px 0}
+.conf-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--rd),var(--or),var(--va));transition:width 1s ease}
+/* ALERTAS */
+.alerta-z{background:rgba(255,112,67,.12);border:2px solid var(--or);border-radius:var(--r12);padding:14px;display:flex;gap:12px;align-items:flex-start}
+/* TIMELINE VACUNAS */
+.vacrow{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r8);transition:background .15s}
+.vacrow:hover{background:rgba(255,255,255,.04)}
+.vacrow .dias{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;min-width:44px;text-align:center}
+/* MAPA placeholder */
+.mapa-ph{height:220px;background:linear-gradient(135deg,#0d2a1a,#1a3a2a);border-radius:var(--r16);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--ts);border:1px solid var(--bd)}
+/* REPORTE */
+.reporte-preview{background:rgba(0,0,0,.3);border-radius:var(--r12);padding:16px;font-size:.82rem;line-height:1.7;color:var(--ts);white-space:pre-wrap;font-family:'Courier New',monospace;border:1px solid var(--bd)}
+/* ANIM */
+@keyframes fiu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slu{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">🥚 Huevo de Oro</div>
+  <div class="topbar-kpis">
+    <div class="tkpi"><b id="hkpi-doc">—</b>Doc. hoy</div>
+    <div class="tkpi"><b id="hkpi-costo">—</b>$/doc</div>
+    <div class="tkpi"><b id="hkpi-stock">—</b>Aves</div>
+  </div>
+</div>
+
+<main class="main" id="main"></main>
+
+<nav class="bottomnav">
+  <button class="navbtn active" onclick="nav('dashboard',this)" data-tab="dashboard">
+    <span class="ni">📊</span>Panel
+  </button>
+  <button class="navbtn" onclick="nav('registros',this)" data-tab="registros">
+    <span class="ni">📝</span>Registros
+  </button>
+  <button class="navbtn" onclick="nav('conteo',this)" data-tab="conteo">
+    <span class="ni">📸</span>Conteo IA
+  </button>
+  <button class="navbtn" onclick="nav('clientes',this)" data-tab="clientes">
+    <span class="ni">👥</span>Clientes
+  </button>
+  <button class="navbtn" onclick="nav('sanitario',this)" data-tab="sanitario">
+    <span class="ni">💉</span>Sanidad
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div id="overlay" class="hidden" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<script>
+// ── DATOS DEMO ────────────────────────────────────────────
+const DB = {
+  registros: [
+    {id:1,fecha:'2026-03-22',galpon:'Galpón A',postura:1308,mortalidad:0,alimento:185,agua:319,temp:29.8},
+    {id:2,fecha:'2026-03-21',galpon:'Galpón A',postura:1290,mortalidad:1,alimento:184,agua:316,temp:31.0},
+    {id:3,fecha:'2026-03-20',galpon:'Galpón A',postura:1315,mortalidad:0,alimento:186.5,agua:322,temp:28.2},
+    {id:4,fecha:'2026-03-19',galpon:'Galpón A',postura:1320,mortalidad:0,alimento:187,agua:320,temp:27.8},
+    {id:5,fecha:'2026-03-18',galpon:'Galpón A',postura:1302,mortalidad:0,alimento:185.5,agua:318,temp:29.5},
+    {id:6,fecha:'2026-03-14',galpon:'Galpón A',postura:1150,mortalidad:2,alimento:182,agua:360,temp:36.5},
+    {id:7,fecha:'2026-03-22',galpon:'Galpón B',postura:688,mortalidad:1,alimento:97,agua:180,temp:29.8},
+    {id:8,fecha:'2026-03-21',galpon:'Galpón B',postura:701,mortalidad:0,alimento:99.5,agua:178,temp:31.0},
+  ],
+  clientes: [
+    {id:1,nombre:'Almacén "El Cruce"',tipo:'Almacén',zona:'Rivadavia',wsp:'5492614561234',maples:3,saldo:84000,deuda:true},
+    {id:2,nombre:'Verdulería Don Mario',tipo:'Verdulería',zona:'Rivadavia',wsp:'5492614789012',maples:5,saldo:56000,deuda:true},
+    {id:3,nombre:'Restaurante "El Patio"',tipo:'Restaurante',zona:'Junín',wsp:'5492615123456',maples:0,saldo:0,deuda:false},
+    {id:4,nombre:'Almacén Avenida Nueva',tipo:'Almacén',zona:'San Martín',wsp:'5492616789012',maples:4,saldo:110000,deuda:true},
+    {id:5,nombre:'Familia Rodríguez',tipo:'Particular',zona:'Rivadavia',wsp:'5492614234567',maples:1,saldo:0,deuda:false},
+  ],
+  costos:{balanceado:650,maiz:380,flete:45,manoObra:15000,amortAve:12},
+  vacunas:[
+    {id:1,lote:'Galpón A · Hy-Line',vacuna:'Newcastle',proxima:'2026-04-01',diasRestantes:9,hecho:false},
+    {id:2,lote:'Galpón B · Lohmann',vacuna:'Newcastle',proxima:'2026-04-15',diasRestantes:23,hecho:false},
+    {id:3,lote:'Galpón A · Hy-Line',vacuna:'Bronquitis IB',proxima:'2026-05-01',diasRestantes:39,hecho:false},
+    {id:4,lote:'Galpón A · Hy-Line',vacuna:'Gumboro',proxima:null,diasRestantes:null,hecho:true},
+  ],
+  renspa:{numero:'08-014-2-00234/26',vencimiento:'2026-12-31',estado:'vigente'}
+};
+let modalCb=null, editId=null, tabActual='dashboard';
+
+// ── HELPERS ───────────────────────────────────────────────
+const pesos=n=>'$'+Math.round(n).toLocaleString('es-AR');
+const pct=(a,b)=>((a/b)*100).toFixed(1)+'%';
+const chipZona=z=>({Rivadavia:'g',Junín:'b','San Martín':'a',Junin:'b','San Martin':'a'}[z]||'g');
+let nextId=()=>Date.now();
+
+function toast(msg,tipo='ok'){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(26,58,26,.97);border:1px solid rgba(76,175,80,.4);padding:10px 20px;border-radius:12px;font-size:.85rem;z-index:9999;animation:fiu .3s ease;white-space:nowrap;font-weight:600';
+  if(tipo==='err') t.style.borderColor='rgba(239,83,80,.4)';
+  t.textContent='  '+msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2800);
+}
+
+// ── ROUTER ────────────────────────────────────────────────
+function nav(tab,btn){
+  tabActual=tab;
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPage(tab);
+}
+
+function renderPage(tab){
+  const M=document.getElementById('main');
+  M.innerHTML='';
+  const fns={dashboard:pgDashboard,registros:pgRegistros,conteo:pgConteo,clientes:pgClientes,sanitario:pgSanitario};
+  if(fns[tab]) M.innerHTML=fns[tab]();
+  hookPage(tab);
+  actualizarTopbar();
+}
+
+// ── TOPBAR ────────────────────────────────────────────────
+function actualizarTopbar(){
+  const hoy=DB.registros.filter(r=>r.galpon==='Galpón A').sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
+  document.getElementById('hkpi-doc').textContent=hoy?Math.floor(hoy.postura/12)+'':'-';
+  document.getElementById('hkpi-costo').textContent=pesos(calcCostoDocena()).replace('$','$');
+  document.getElementById('hkpi-stock').textContent='2.238';
+}
+
+// ── COSTO/DOCENA ──────────────────────────────────────────
+function fechaUltimoRegistro(){
+  if(!DB.registros.length) return null;
+  return DB.registros.map(r=>r.fecha).sort().reverse()[0];
+}
+function calcCostoDocena(){
+  const {balanceado,manoObra,amortAve}=DB.costos;
+  const fechaRef=fechaUltimoRegistro();
+  if(!fechaRef) return 0;
+  const hoy=DB.registros.filter(r=>r.fecha===fechaRef);
+  const totalDoc=hoy.reduce((a,r)=>a+r.postura,0)/12;
+  const totalKg=hoy.reduce((a,r)=>a+r.alimento,0);
+  const costoAlim=totalKg*balanceado;
+  return totalDoc>0?(costoAlim+manoObra+(amortAve*2238))/totalDoc:0;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function pgDashboard(){
+  const fechaRef=fechaUltimoRegistro()||new Date().toISOString().slice(0,10);
+  const regHoy=DB.registros.filter(r=>r.fecha===fechaRef);
+  const totalHoy=regHoy.reduce((a,r)=>a+r.postura,0)||1996;
+  const docHoy=Math.floor(totalHoy/12);
+  const costo=calcCostoDocena();const margen=((2800-costo)/2800*100);
+  const semClass=margen>40?'g':margen>20?'a':'r';
+  const semIcon=margen>40?'🟢':margen>20?'🟡':'🔴';
+  const totalDeuda=DB.clientes.filter(c=>c.deuda).reduce((a,c)=>a+c.saldo,0);
+
+  return `<div class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <span class="page-title">📊 Panel Ejecutivo</span>
+    <button class="btn btn-sm btn-verde" onclick="simularReporte()">📤 Reporte WhatsApp</button>
+  </div>
+
+  <div class="alerta-z">
+    <span style="font-size:1.8rem">🌡️</span>
+    <div>
+      <div style="font-weight:700;font-size:.9rem">Protocolo Zonda Activo</div>
+      <div style="font-size:.78rem;color:var(--ts);margin-top:2px">El 14-mar: 36.5°C — Postura cayó un <b style="color:var(--rd)">12.5%</b>. Acción: sombra + agua fría cada 2h.</div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kcard"><div class="v">${docHoy}</div><div class="l">Docenas hoy</div><div class="sub">↑3% vs ayer</div></div>
+    <div class="kcard"><div class="v">${pesos(costo)}</div><div class="l">Costo/docena</div><div class="sub">Precio venta $2.800</div></div>
+    <div class="kcard"><div class="v">${pct(1308+688,2238)}</div><div class="l">% Postura</div><div class="sub">Óptimo &gt;85%</div></div>
+    <div class="kcard" style="border-color:rgba(239,83,80,.3)"><div class="v" style="color:var(--rd)">${pesos(totalDeuda)}</div><div class="l">CxC pendiente</div><div class="sub">${DB.clientes.filter(c=>c.deuda).length} clientes</div></div>
+  </div>
+
+  <div class="semaf ${semClass}">
+    <span style="font-size:2.5rem">${semIcon}</span>
+    <span class="sv" style="color:${semClass==='g'?'var(--va)':semClass==='a'?'#ffc107':'var(--rd)'}">${margen.toFixed(1)}% margen</span>
+    <div class="sl">Precio actual $2.800/doc · Costo ${pesos(costo)}/doc · ${margen>40?'✅ Rentable':'⚠️ Revisar costos'}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>🔍 Auditor IA · Alertas</h3></div>
+    <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:center;font-size:.82rem">
+        <span>✅</span><span>FCR normal: 1.91 kg alimento/docena (óptimo &lt;2.5)</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:.82rem">
+        <span>⚠️</span><span style="color:#ffd54f">14-mar: FCR subió a 2.26 por estrés calórico — monitorear</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:.82rem">
+        <span>🔴</span><span style="color:#ef9a9a">Almacén "El Cruce" lleva 5 días sin pagar $84.000 — gestionar cobro</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="reporte-area" class="hidden">
+    <div class="card-head" style="padding:12px 0 8px"><h3>📄 Vista previa del reporte</h3></div>
+    <div class="reporte-preview" id="reporte-texto"></div>
+  </div>
+</div>`;
+}
+
+function simularReporte(){
+  const costo=calcCostoDocena();
+  const txt=`🥚 *REPORTE DOMINICAL — Huevo de Oro Rivadavia*
+📅 Semana 22 al 28 de marzo 2026
+
+📦 *PRODUCCIÓN*
+• Galpón A: 9.163 huevos (763 doc)
+• Galpón B: 4.830 huevos (402 doc)
+• *TOTAL: 1.165 docenas*
+
+📈 *FINANCIERO*
+• Precio promedio: $2.800/doc
+• Costo/docena: ${pesos(costo)}
+• Margen bruto: ${((2800-costo)/2800*100).toFixed(1)}%
+• Ventas semana: $3.262.000
+
+⚠️ *ALERTAS*
+• ${DB.clientes.filter(c=>c.deuda).length} clientes con saldo pendiente
+• Newcastle Galpón A vence en 9 días
+• Episodio Zonda: 14-mar ↓12% postura
+
+✅ *Estado general: NORMAL*
+Sistema Huevo de Oro · Rivadavia, Mendoza`;
+  const area=document.getElementById('reporte-area');
+  document.getElementById('reporte-texto').textContent=txt;
+  area.classList.remove('hidden');
+  toast('📤 Reporte generado (WhatsApp pendiente de API)');
+  area.scrollIntoView({behavior:'smooth'});
+}
+
+// ── REGISTROS DIARIOS ─────────────────────────────────────
+function pgRegistros(){
+  const rows=DB.registros.map(r=>{
+    const fcr=(r.alimento/(r.postura/12)).toFixed(2);
+    const fcrChip=fcr<2?'g':fcr<2.5?'a':'r';
+    return `<tr>
+      <td><b>${r.fecha}</b><br><span style="font-size:.72rem;color:var(--ts)">${r.galpon}</span></td>
+      <td><b style="color:var(--do)">${Math.floor(r.postura/12)}</b><br><span style="color:var(--ts);font-size:.72rem">${r.postura} huevos</span></td>
+      <td><span class="chip ${r.mortalidad>0?'r':'g'}">${r.mortalidad}</span></td>
+      <td>${r.alimento} kg</td>
+      <td><span class="chip ${fcrChip}">${fcr}</span></td>
+      <td style="color:${r.temp>=35?'var(--rd)':r.temp>=32?'#ffd54f':'var(--ts)'}">${r.temp}°C</td>
+      <td>
+        <button class="btn btn-sm btn-ghost" onclick="editRegistro(${r.id})">✏️</button>
+        <button class="btn btn-sm btn-rojo" onclick="delRegistro(${r.id})" style="margin-left:4px">🗑</button>
+      </td>
+    </tr>`}).join('');
+
+  return `<div class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <span class="page-title">📝 Registros de Campo</span>
+    <button class="btn btn-sm btn-verde" onclick="newRegistro()">+ Nuevo</button>
+  </div>
+  <div style="font-size:.8rem;color:var(--ts)">FCR óptimo: &lt;2.0 kg alimento/docena</div>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Fecha / Galpón</th><th>Docenas</th><th>Mort.</th><th>Alimento</th><th>FCR</th><th>Temp</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+</div>`;
+}
+
+function newRegistro(){
+  editId=null;
+  abrirModal(`<h2>📝 Nuevo Registro Diario</h2>
+    ${formRegistro()}
+    <div class="modal-footer">
+      <button class="btn btn-md btn-verde btn-full" onclick="guardarRegistro()">💾 Guardar</button>
+    </div>`);
+}
+
+function editRegistro(id){
+  editId=id;
+  const r=DB.registros.find(x=>x.id===id);
+  abrirModal(`<h2>✏️ Editar Registro</h2>
+    ${formRegistro(r)}
+    <div class="modal-footer">
+      <button class="btn btn-md btn-verde btn-full" onclick="guardarRegistro()">💾 Actualizar</button>
+    </div>`);
+}
+
+function formRegistro(r={}){
+  return `
+    <div class="fgrp"><label>Fecha</label><input type="date" id="f-fecha" value="${r.fecha||new Date().toISOString().slice(0,10)}"></div>
+    <div class="fgrp"><label>Galpón</label>
+      <select id="f-galpon"><option ${r.galpon==='Galpón A'?'selected':''}>Galpón A</option><option ${r.galpon==='Galpón B'?'selected':''}>Galpón B</option></select>
+    </div>
+    <div class="fgrp"><label>Huevos producidos</label><input type="number" id="f-postura" value="${r.postura||''}" placeholder="ej: 1300"></div>
+    <div class="fgrp"><label>Mortalidad (aves)</label><input type="number" id="f-mort" value="${r.mortalidad||0}"></div>
+    <div class="fgrp"><label>Alimento (kg)</label><input type="number" step="0.5" id="f-alim" value="${r.alimento||''}" placeholder="ej: 185"></div>
+    <div class="fgrp"><label>Temperatura máxima (°C)</label><input type="number" step="0.1" id="f-temp" value="${r.temp||''}" placeholder="ej: 29.5"></div>`;
+}
+
+function guardarRegistro(){
+  const obj={
+    fecha:document.getElementById('f-fecha').value,
+    galpon:document.getElementById('f-galpon').value,
+    postura:+document.getElementById('f-postura').value,
+    mortalidad:+document.getElementById('f-mort').value,
+    alimento:+document.getElementById('f-alim').value,
+    agua:0,
+    temp:+document.getElementById('f-temp').value
+  };
+  if(!obj.postura){toast('⚠️ Ingresá la producción','err');return;}
+  if(editId){
+    const i=DB.registros.findIndex(r=>r.id===editId);
+    DB.registros[i]={...DB.registros[i],...obj};
+    toast('✅ Registro actualizado');
+  } else {
+    DB.registros.unshift({id:nextId(),...obj});
+    toast('✅ Registro guardado');
+  }
+  cerrarModal(); renderPage('registros');
+}
+
+function delRegistro(id){
+  if(!confirm('¿Eliminar este registro?'))return;
+  DB.registros=DB.registros.filter(r=>r.id!==id);
+  toast('🗑 Registro eliminado');
+  renderPage('registros');
+}
+
+// ── CONTEO IA ─────────────────────────────────────────────
+function pgConteo(){
+  return `<div class="page">
+  <span class="page-title">📸 Conteo IA por Foto</span>
+  <div style="font-size:.82rem;color:var(--ts)">Gemini Vision analiza la foto y cuenta automáticamente huevos, pollos o maples. El operador confirma o corrige.</div>
+
+  <div class="foto-drop" id="foto-drop" onclick="document.getElementById('foto-inp').click()">
+    <input type="file" id="foto-inp" accept="image/*" capture="environment" onchange="procesarFoto(this)">
+    <span class="icn" id="foto-icn">📷</span>
+    <div style="font-weight:700;font-size:.95rem">Tomar o elegir foto</div>
+    <div style="color:var(--ts);font-size:.78rem;margin-top:4px">Huevos · Pollos · Maples</div>
+  </div>
+
+  <div class="fgrp">
+    <label>¿Qué se cuenta?</label>
+    <select id="tipo-objeto">
+      <option value="huevos">🥚 Huevos (en cinta / nidal)</option>
+      <option value="pollos">🐔 Pollos / Gallinas</option>
+      <option value="maples">📦 Maples apilados</option>
+    </select>
+  </div>
+
+  <div id="conteo-resultado" class="hidden">
+    <div class="conteo-box">
+      <div style="font-size:.8rem;color:var(--ts);margin-bottom:4px">🤖 Conteo IA (Gemini Vision)</div>
+      <div class="conteo-num" id="cn-ia">—</div>
+      <div style="font-size:.78rem;color:var(--ts)">objetos detectados</div>
+      <div class="conf-bar"><div class="conf-fill" id="cn-conf" style="width:0"></div></div>
+      <div style="font-size:.72rem;color:var(--ts)" id="cn-conf-txt">Confianza: —%</div>
+    </div>
+
+    <div class="fgrp" style="margin-top:12px">
+      <label>✏️ Confirmar / Corregir conteo manual</label>
+      <input type="number" id="cn-manual" placeholder="Si el IA falló, corregí acá">
+    </div>
+    <div style="display:flex;gap:5px;font-size:.75rem;color:var(--ts);margin-top:-4px">
+      <span>⚠️ Si difieren &gt;5%, el sistema lanza alerta de auditoría.</span>
+    </div>
+    <button class="btn btn-md btn-verde btn-full" style="margin-top:10px" onclick="confirmarConteo()">✅ Confirmar y guardar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>📋 Últimos conteos</h3></div>
+    <table>
+      <thead><tr><th>Fecha</th><th>Tipo</th><th>IA</th><th>Manual</th><th>Delta</th><th>Alerta</th></tr></thead>
+      <tbody>
+        <tr><td>22-mar</td><td>Huevos</td><td>144</td><td>144</td><td>0</td><td><span class="chip g">OK</span></td></tr>
+        <tr><td>21-mar</td><td>Pollos</td><td>1.440</td><td>1.455</td><td>15</td><td><span class="chip a">1%</span></td></tr>
+        <tr><td>20-mar</td><td>Maples</td><td>48</td><td>50</td><td>2</td><td><span class="chip g">OK</span></td></tr>
+        <tr><td>14-mar</td><td>Huevos</td><td>96</td><td>115</td><td>19</td><td><span class="chip r">🚨 16%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>`;
+}
+
+function procesarFoto(inp){
+  if(!inp.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const drop=document.getElementById('foto-drop');
+    drop.style.cssText='border-radius:12px;overflow:hidden;padding:0;height:200px;background:no-repeat center/cover url('+e.target.result+')';
+    drop.innerHTML='<div style="height:100%;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><div style="width:40px;height:40px;border:4px solid rgba(255,255,255,.1);border-top-color:var(--va);border-radius:50%;animation:spin .8s linear infinite"></div></div>';
+    const tipo=document.getElementById('tipo-objeto').value;
+    setTimeout(()=>mostrarResultadoIA(tipo),2200);
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+
+function mostrarResultadoIA(tipo){
+  const counts={huevos:[108,144,96,132,156],pollos:[1438,1451,1440,1428],maples:[46,48,50,52]};
+  const arr=counts[tipo]||counts.huevos;
+  const ia=arr[Math.floor(Math.random()*arr.length)];
+  const conf=Math.floor(82+Math.random()*16);
+  document.getElementById('conteo-resultado').classList.remove('hidden');
+  document.getElementById('cn-ia').textContent=ia.toLocaleString('es-AR');
+  document.getElementById('cn-manual').value=ia;
+  document.getElementById('cn-conf-txt').textContent=`Confianza: ${conf}%`;
+  setTimeout(()=>{document.getElementById('cn-conf').style.width=conf+'%'},100);
+  document.getElementById('foto-drop').style.cssText='border:2px dashed rgba(76,175,80,.4);border-radius:12px;padding:32px;text-align:center;background:rgba(76,175,80,.06)';
+  document.getElementById('foto-drop').innerHTML='<span style="font-size:2rem">✅</span><div style="font-weight:700;margin-top:6px">Foto procesada</div>';
+}
+
+function confirmarConteo(){
+  const iaRaw=document.getElementById('cn-ia').textContent.replace(/[.\s]/g,'').replace(',','.');
+  const ia=parseInt(iaRaw,10);
+  const manualRaw=document.getElementById('cn-manual').value;
+  const manual=manualRaw?parseInt(manualRaw,10):ia;
+  if(isNaN(ia)||isNaN(manual)){toast('⚠️ Valores inválidos','err');return;}
+  const delta=Math.abs(ia-manual);
+  const pct5=ia*0.05;
+  if(delta>pct5) toast(`🚨 Alerta: diferencia de ${delta} objetos (${((delta/ia)*100).toFixed(1)}%) — auditando`,'err');
+  else toast('✅ Conteo guardado · Delta: '+delta+' (OK)');
+  renderPage('conteo');
+}
+
+// ── CLIENTES ──────────────────────────────────────────────
+function pgClientes(){
+  const rows=DB.clientes.map(c=>`
+    <div class="cliente-item" style="display:flex;gap:12px;align-items:center;padding:12px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:12px">
+      <div style="font-size:1.6rem">${{Almacén:'🏪',Verdulería:'🥬',Restaurante:'🍽️',Particular:'👤',Distribuidor:'🚛'}[c.tipo]||'👤'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nombre}</div>
+        <div style="font-size:.72rem;color:var(--ts);margin-top:2px">
+          <span class="chip ${chipZona(c.zona)}">${c.zona}</span>  
+          🗂 ${c.maples} maples · ${c.deuda?'<span style="color:var(--rd);font-weight:700">Debe '+pesos(c.saldo)+'</span>':'<span style="color:var(--va)">Al día ✓</span>'}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-sm btn-ghost" onclick="editCliente(${c.id})">✏️</button>
+        <button class="btn btn-sm" style="background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);color:#25d366;border-radius:8px;font-size:.78rem;padding:5px 8px" onclick="wspCliente(${c.id})">💬</button>
+        <button class="btn btn-sm btn-rojo" onclick="delCliente(${c.id})">🗑</button>
+      </div>
+    </div>`).join('');
+
+  const totalMaples=DB.clientes.reduce((a,c)=>a+c.maples,0);
+  const totalDeuda=DB.clientes.filter(c=>c.deuda).reduce((a,c)=>a+c.saldo,0);
+
+  return `<div class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <span class="page-title">👥 Clientes</span>
+    <button class="btn btn-sm btn-verde" onclick="newCliente()">+ Nuevo</button>
+  </div>
+  <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="kcard"><div class="v">${DB.clientes.length}</div><div class="l">Total</div></div>
+    <div class="kcard" style="border-color:rgba(239,83,80,.3)"><div class="v" style="color:var(--rd);font-size:1.3rem">${pesos(totalDeuda)}</div><div class="l">CxC</div></div>
+    <div class="kcard" style="border-color:rgba(255,193,7,.3)"><div class="v" style="color:var(--do)">${totalMaples}</div><div class="l">Maples out</div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
+</div>`;
+}
+
+function newCliente(){
+  editId=null;
+  abrirModal(`<h2>👥 Nuevo Cliente</h2>
+    ${formCliente()}
+    <div class="modal-footer"><button class="btn btn-md btn-verde btn-full" onclick="guardarCliente()">💾 Guardar</button></div>`);
+}
+
+function editCliente(id){
+  editId=id;
+  const c=DB.clientes.find(x=>x.id===id);
+  abrirModal(`<h2>✏️ Editar Cliente</h2>
+    ${formCliente(c)}
+    <div class="modal-footer"><button class="btn btn-md btn-verde btn-full" onclick="guardarCliente()">💾 Actualizar</button></div>`);
+}
+
+function formCliente(c={}){
+  const tipos=['Almacén','Verdulería','Restaurante','Particular','Distribuidor'];
+  const zonas=['Rivadavia','Junín','San Martín','Mendoza Capital'];
+  return `
+    <div class="fgrp"><label>Nombre</label><input id="c-nom" value="${c.nombre||''}" placeholder="Nombre / Razón social"></div>
+    <div class="fgrp"><label>Tipo</label>
+      <select id="c-tipo">${tipos.map(t=>`<option ${c.tipo===t?'selected':''}>${t}</option>`).join('')}</select>
+    </div>
+    <div class="fgrp"><label>Zona</label>
+      <select id="c-zona">${zonas.map(z=>`<option ${c.zona===z?'selected':''}>${z}</option>`).join('')}</select>
+    </div>
+    <div class="fgrp"><label>WhatsApp (sin +)</label><input id="c-wsp" value="${c.wsp||''}" placeholder="5492614xxxxxx" type="tel"></div>
+    <div class="fgrp"><label>Maples en poder</label><input id="c-map" type="number" value="${c.maples||0}"></div>`;
+}
+
+function guardarCliente(){
+  const nom=document.getElementById('c-nom').value.trim();
+  if(!nom){toast('⚠️ Ingresá el nombre','err');return;}
+  const obj={
+    nombre:nom,
+    tipo:document.getElementById('c-tipo').value,
+    zona:document.getElementById('c-zona').value,
+    wsp:document.getElementById('c-wsp').value,
+    maples:+document.getElementById('c-map').value,
+    saldo:0,deuda:false
+  };
+  if(editId){Object.assign(DB.clientes.find(c=>c.id===editId),obj);toast('✅ Cliente actualizado');}
+  else{DB.clientes.push({id:nextId(),...obj});toast('✅ Cliente agregado');}
+  cerrarModal();renderPage('clientes');
+}
+
+function delCliente(id){
+  if(!confirm('¿Eliminar este cliente?'))return;
+  DB.clientes=DB.clientes.filter(c=>c.id!==id);
+  toast('🗑 Cliente eliminado');renderPage('clientes');
+}
+
+function wspCliente(id){
+  const c=DB.clientes.find(x=>x.id===id);
+  const msg=`Hola ${c.nombre.split(' ')[0]}! 👋 Te recordamos que tenés un saldo pendiente de ${pesos(c.saldo)} con *Huevo de Oro Rivadavia*. Podés abonar por transferencia o efectivo. ¡Gracias! 🥚`;
+  window.open(`https://wa.me/${c.wsp}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ── SANITARIO ─────────────────────────────────────────────
+function pgSanitario(){
+  const vacRows=DB.vacunas.map(v=>{
+    if(v.hecho) return `<div class="vacrow"><span style="font-size:1.5rem">✅</span><div><div style="font-weight:600;font-size:.9rem;color:var(--ts)">${v.vacuna}</div><div style="font-size:.72rem;color:var(--ts)">${v.lote} · Completada</div></div></div>`;
+    const cl=v.diasRestantes<=10?'var(--rd)':v.diasRestantes<=21?'#ffd54f':'var(--va)';
+    return `<div class="vacrow"><div class="dias" style="color:${cl}">${v.diasRestantes}<br><span style="font-size:.55rem;font-weight:500;color:var(--ts)">días</span></div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:.9rem">${v.vacuna}</div>
+        <div style="font-size:.72rem;color:var(--ts)">${v.lote}</div>
+        <div style="font-size:.72rem;color:var(--ts)">Vence: ${v.proxima}</div>
+      </div>
+      <span class="chip ${v.diasRestantes<=10?'r':v.diasRestantes<=21?'a':'g'}">${v.diasRestantes<=10?'URGENTE':v.diasRestantes<=21?'PRONTO':'OK'}</span>
+    </div>`;}).join('');
+
+  return `<div class="page">
+  <span class="page-title">💉 Calendario Sanitario</span>
+
+  <div class="card" style="border-color:rgba(171,71,188,.3)">
+    <div class="card-head"><h3>🏥 RENSPA</h3><span class="chip g">${DB.renspa.estado.toUpperCase()}</span></div>
+    <div style="padding:14px">
+      <div style="font-size:.82rem"><b>${DB.renspa.numero}</b></div>
+      <div style="font-size:.78rem;color:var(--ts);margin-top:4px">Vencimiento: ${DB.renspa.vencimiento}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h3>💉 Plan de Vacunación</h3>
+      <button class="btn btn-sm btn-verde" onclick="newVacuna()">+ Agregar</button>
+    </div>
+    <div style="padding:8px 0">${vacRows}</div>
+  </div>
+
+  <div style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);border-radius:12px;padding:14px">
+    <div style="font-weight:700;font-size:.88rem;margin-bottom:8px">📋 Protocolo Bioseguridad SENASA</div>
+    <div style="font-size:.78rem;color:var(--ts);display:flex;flex-direction:column;gap:5px">
+      <div>✅ Pediluvio activo en acceso a galpones</div>
+      <div>✅ Registro de visitas actualizado</div>
+      <div>⚠️ Renovar desinfección de galpón B (última: 15-feb)</div>
+    </div>
+  </div>
+</div>`;
+}
+
+function newVacuna(){
+  abrirModal(`<h2>💉 Nueva Vacunación</h2>
+    <div class="fgrp"><label>Vacuna</label>
+      <select id="v-vac"><option>Newcastle</option><option>Gumboro</option><option>Bronquitis IB</option><option>Marek</option><option>Coriza</option></select>
+    </div>
+    <div class="fgrp"><label>Lote</label>
+      <select id="v-lote"><option>Galpón A · Hy-Line</option><option>Galpón B · Lohmann</option></select>
+    </div>
+    <div class="fgrp"><label>Próxima aplicación</label><input type="date" id="v-fecha"></div>
+    <div class="modal-footer">
+      <button class="btn btn-md btn-verde btn-full" onclick="guardarVacuna()">💾 Guardar</button>
+    </div>`);
+}
+
+function guardarVacuna(){
+  const fecha=document.getElementById('v-fecha').value;
+  if(!fecha){toast('⚠️ Seleccioná una fecha','err');return;}
+  const dias=Math.round((new Date(fecha)-new Date())/86400000);
+  DB.vacunas.unshift({id:nextId(),vacuna:document.getElementById('v-vac').value,lote:document.getElementById('v-lote').value,proxima:fecha,diasRestantes:dias,hecho:false});
+  toast('✅ Vacunación programada');
+  cerrarModal();renderPage('sanitario');
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function abrirModal(html){
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function cerrarModal(){document.getElementById('overlay').classList.add('hidden');}
+
+// ── HOOKS POR PAGE ────────────────────────────────────────
+function hookPage(tab){}
+
+// ── INIT ──────────────────────────────────────────────────
+renderPage('dashboard');
+</script>
+</body>
+</html>

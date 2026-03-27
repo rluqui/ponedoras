@@ -1,0 +1,37 @@
+{
+  "name": "Huevo de Oro Rivadavia",
+  "short_name": "Ponedoras",
+  "description": "Sistema de gestión avícola para establecimiento en Rivadavia, Mendoza",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1f0d",
+  "theme_color": "#1a2e1a",
+  "orientation": "portrait",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registro diario",
+      "url": "/?tab=registro",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Conteo por foto",
+      "url": "/?tab=conteo",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "96x96" }]
+    }
+  ]
+}
