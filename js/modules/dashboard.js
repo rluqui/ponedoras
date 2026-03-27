@@ -14,16 +14,23 @@ const ModuloDashboard = (() => {
       </div>
 
       <div class="seccion-bloque">
-        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; padding-bottom:8px" id="dashboard-filtros">
-          <button class="pill-filtro activa" data-dias="7">7 Días</button>
-          <button class="pill-filtro" data-dias="15">15 Días</button>
-          <button class="pill-filtro" data-dias="30">30 Días</button>
-          <span style="color:var(--texto-secundario); margin:0 4px">|</span>
-          <div style="display:flex; gap:6px; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:4px 8px">
-            <input type="date" id="dash-desde" style="background:transparent; color:#fff; border:none; outline:none; font-family:inherit; font-size:0.8rem; cursor:pointer" title="Filtro Desde">
-            <span style="color:#aaa; font-size:0.8rem">-</span>
-            <input type="date" id="dash-hasta" style="background:transparent; color:#fff; border:none; outline:none; font-family:inherit; font-size:0.8rem; cursor:pointer" title="Filtro Hasta">
-            <button class="pill-filtro" id="btn-filtro-custom" style="padding:4px 8px; margin-left:4px; font-size:1rem" title="Aplicar rango">🔍</button>
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;" id="dashboard-filtros">
+            <button class="pill-filtro activa" data-dias="7">7 Días</button>
+            <button class="pill-filtro" data-dias="15">15 Días</button>
+            <button class="pill-filtro" data-dias="30">30 Días</button>
+            <span style="color:var(--texto-secundario); margin:0 4px">|</span>
+            <div style="display:flex; gap:6px; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:4px 8px">
+              <input type="date" id="dash-desde" style="background:transparent; color:#fff; border:none; outline:none; font-family:inherit; font-size:0.8rem; cursor:pointer" title="Filtro Desde">
+              <span style="color:#aaa; font-size:0.8rem">-</span>
+              <input type="date" id="dash-hasta" style="background:transparent; color:#fff; border:none; outline:none; font-family:inherit; font-size:0.8rem; cursor:pointer" title="Filtro Hasta">
+              <button class="pill-filtro" id="btn-filtro-custom" style="padding:4px 8px; margin-left:4px; font-size:1rem" title="Aplicar rango">🔍</button>
+            </div>
+          </div>
+          <div>
+            <select id="filtro-galpon" style="background:rgba(0,0,0,0.4); color:#fff; font-weight:600; font-family:inherit; border:1px solid rgba(255,255,255,0.2); padding:6px 12px; border-radius:12px; font-size:0.85rem; outline:none; cursor:pointer">
+              <option value="todos">Todos los galpones</option>
+            </select>
           </div>
         </div>
 
@@ -65,7 +72,31 @@ const ModuloDashboard = (() => {
 
   async function postRender() {
     configurarFiltros();
+    await cargarFiltroGalpones();
     await cargarDatos(7); // por defecto 7 dias
+  }
+
+  async function cargarFiltroGalpones() {
+    const galpones = await DB.obtenerGalpones();
+    const select = document.getElementById('filtro-galpon');
+    if(!select) return;
+    galpones.forEach(g => {
+       const opt = document.createElement('option');
+       opt.value = g.id; opt.textContent = g.nombre;
+       select.appendChild(opt);
+    });
+    select.addEventListener('change', () => {
+       // Disparar recarga detectando qué botón de días está prendido
+       const activa = document.querySelector('#dashboard-filtros .pill-filtro.activa');
+       if (activa) {
+          cargarDatos(parseInt(activa.dataset.dias));
+       } else {
+          cargarDatos({ 
+            desde: document.getElementById('dash-desde').value, 
+            hasta: document.getElementById('dash-hasta').value 
+          });
+       }
+    });
   }
 
   function configurarFiltros() {
@@ -109,8 +140,10 @@ const ModuloDashboard = (() => {
       chartProduccion = null;
     }
     
-    // Obtener data del db pasándole el numero o el objeto custom
-    const datos = await DB.obtenerDataDashboard(paramFiltro);
+    const valGalpon = document.getElementById('filtro-galpon')?.value || 'todos';
+
+    // Obtener data del db pasándole el numero o el objeto custom + galponId
+    const datos = await DB.obtenerDataDashboard(paramFiltro, valGalpon);
 
     // Preparar totales
     const maxHuevos = datos.produccion.reduce((s, d) => s + d.huevos, 0);

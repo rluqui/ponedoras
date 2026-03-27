@@ -645,7 +645,7 @@ const DB = (() => {
 })();
 
 // ── IMPLEMENTACIÓN DASHBOARD ──
-async function obtenerDataDashboard(paramFiltro) {
+async function obtenerDataDashboard(paramFiltro, galponId = 'todos') {
   const db = obtenerSupabase();
   let df, dt;
   let diasSimulados = 7;
@@ -667,16 +667,19 @@ async function obtenerDataDashboard(paramFiltro) {
      for(let i=0; i<diasSimulados; i++) {
        const t = new Date(dt); t.setDate(t.getDate() - i);
        const d = t.toISOString().split('T')[0];
-       _p.push({ fecha: d, huevos: Math.floor(300+Math.random()*20), mortandad: Math.floor(Math.random()*2) });
+       _p.push({ fecha: d, huevos: Math.floor(300+Math.random()*20), mortandad: Math.floor(Math.random()*2), galpon_id: 'demo1' });
        if(Math.random() > 0.3) _v.push({ fecha: d, docenas: Math.floor(10+Math.random()*15) });
      }
      return { produccion: _p, ventas: _v };
   }
 
-  const { data: prod } = await db.from('produccion_diaria')
-    .select('fecha, huevos, mortandad').gte('fecha', df).lte('fecha', dt);
-  const { data: vent } = await db.from('ventas')
-    .select('fecha, docenas').gte('fecha', df).lte('fecha', dt);
+  let prodQuery = db.from('produccion_diaria').select('fecha, galpon_id, huevos, mortandad').gte('fecha', df).lte('fecha', dt);
+  if (galponId !== 'todos') {
+     prodQuery = prodQuery.eq('galpon_id', galponId);
+  }
+  const { data: prod } = await prodQuery;
+  
+  const { data: vent } = await db.from('ventas').select('fecha, docenas').gte('fecha', df).lte('fecha', dt);
 
   return { produccion: prod || [], ventas: vent || [] };
 }
