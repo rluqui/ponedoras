@@ -125,7 +125,7 @@ const ModuloProduccion = (() => {
           <span class="contador-valor" id="val-mortandad">${datosForm.mortandad}</span>
           <button class="btn-numero" onclick="ModuloProduccion.ajustar('mortandad',1)">+</button>
         </div>
-        ${datosForm.mortandad > 2 ? '<p class="hint-texto" style="color:var(--semaforo-rojo)">⚠️ Alta mortandad — revisá el gallinero</p>' : ''}
+        <p class="hint-texto" id="hint-mortandad">${datosForm.mortandad > 2 ? '<span style="color:#f44336">⚠️ Alta mortandad — revisá el gallinero</span>' : ''}</p>
       </div>
 
       <!-- AGUA -->
@@ -203,9 +203,14 @@ const ModuloProduccion = (() => {
         ? `≈ ${Math.floor(datosForm.huevos/30)} maples y ${datosForm.huevos % 30} sueltos`
         : 'Tocá + para sumar';
     }
-    // Alerta mortandad
-    if (campo === 'mortandad' && datosForm.mortandad > 2) {
-      UI.mostrarToast('⚠️ Alta mortandad registrada', 'warning');
+    // Alerta mortandad (inline, sin Toast)
+    if (campo === 'mortandad') {
+      const hint = document.getElementById('hint-mortandad');
+      if (hint) {
+        hint.innerHTML = datosForm.mortandad > 2 
+          ? '<span style="color:#f44336">⚠️ Alta mortandad — revisá el gallinero</span>' 
+          : '';
+      }
     }
   }
 
