@@ -253,10 +253,12 @@ const ModuloProduccion = (() => {
       setTimeout(() => App.navegar('hoy'), 500);
     } else {
       if (btn) { btn.disabled = false; btn.textContent = '✅ Guardar el día'; }
-      const msg = resultado.error?.message?.includes('duplicate')
-        ? `⚠️ Ya cargaste ${datosForm.galpon} hoy. Si querés corregir, editalo desde GRANJA.`
-        : '❌ Error al guardar. Revisá tu conexión.';
+      const errTxt = resultado.error?.message || JSON.stringify(resultado.error) || 'desconocido';
+      const msg = errTxt.includes('duplicate') || errTxt.includes('violates unique constraint')
+        ? `⚠️ Ya cargaste ${datosForm.galpon} hoy. Si querés corregir, editalo desde GALPONES.`
+        : `❌ DB Error: ${errTxt.substring(0,60)}`;
       UI.mostrarToast(msg, 'warning');
+      console.error("SUPABASE ERROR:", resultado.error);
     }
   }
 
