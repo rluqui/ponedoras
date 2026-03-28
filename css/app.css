@@ -3141,3 +3141,16 @@ select.campo-input option { background: var(--verde-medio); color: var(--texto-p
 .bottom-nav { grid-template-columns: repeat(6, 1fr) !important; }
 .nav-item { padding: 4px 2px !important; }
 .nav-label { font-size: 0.65rem !important; letter-spacing: -0.2px; }
+
+/* ── Contador IA: flujo 2 pasos ── */
+.contador-paso { border: 1px solid var(--borde); border-radius: 14px; padding: 14px; background: rgba(255,255,255,0.03); margin-bottom: 12px; }
+.contador-paso-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.contador-paso-badge { background: var(--verde-acento); color: #fff; border-radius: 20px; padding: 2px 9px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; }
+.contador-paso-titulo { font-weight: 600; font-size: 0.9rem; }
+.contador-paso-desc { font-size: 0.78rem; color: var(--texto-terciario); margin-bottom: 10px; }
+.contador-foto-ref { border-style: dashed; border-color: var(--verde-acento) !important; background: rgba(34,197,94,0.04); }
+.contador-ref-acciones { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.ref-guardada-badge { display: block; text-align: center; font-size: 0.72rem; color: var(--verde-acento); margin-top: 4px; font-weight: 600; }
+.resultado-modo { font-size: 0.73rem; color: var(--texto-terciario); margin-top: 2px; margin-bottom: 10px; }
+.btn-link-sm { background: none; border: none; color: var(--verde-acento); font-size: 0.73rem; cursor: pointer; padding: 0; text-decoration: underline; }
+.ref-tip { margin-top: 8px; padding: 6px 10px; background: rgba(34,197,94,0.08); border-radius: 8px; }

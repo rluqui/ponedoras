@@ -1,29 +1,52 @@
-// contador_ia.js — Módulo de conteo IA por foto con Gemini Vision
+// contador_ia.js — Módulo de conteo IA por foto con Gemini Vision (flujo 2 fotos)
 const ContadorIA = (() => {
 
   const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-  // Objetos predefinidos con Ingeniería de Prompts estricta para VLM
+  // Objetos predefinidos — el prompt se usa SOLO como fallback sin foto de referencia
   const OBJETOS_PREDEF = [
-    { id: 'huevos',   nombre: 'Huevos',   emoji: '🥚', prompt: 'IMPORTANTE: Contá ÚNICAMENTE los huevos físicos reales (esferas) que estén visiblemente presentes. NO CUENTES los espacios vacíos de los maples o cartones. No asumas huevos ocultos. Escaneá cuidadosamente y respondé SOLAMENTE con el número entero.' },
-    { id: 'gallinas', nombre: 'Gallinas', emoji: '🐔', prompt: 'Contá todas las aves/gallinas claramente visibles en esta imagen. Solo respondé con el número entero.' },
-    { id: 'maples',   nombre: 'Maples',   emoji: '📦', prompt: 'Contá la cantidad de maples o cartones contenedores (independientemente de si están llenos o vacíos). Solo respondé con el número entero.' },
+    {
+      id: 'huevos',
+      nombre: 'Huevos',
+      emoji: '🥚',
+      promptFallback: 'Contá ÚNICAMENTE los huevos físicos presentes en esta imagen. NO cuentes espacios vacíos de maples ni cartones. Solo respondé con el número entero.'
+    },
+    {
+      id: 'gallinas',
+      nombre: 'Gallinas',
+      emoji: '🐔',
+      promptFallback: 'Contá todas las aves o gallinas claramente visibles. Solo respondé con el número entero.'
+    },
+    {
+      id: 'maples',
+      nombre: 'Maples',
+      emoji: '📦',
+      promptFallback: 'Contá la cantidad de maples o cartones contenedores presentes. Solo respondé con el número entero.'
+    },
   ];
 
-  const STORAGE_KEY = 'gfi_objetos_contador';
+  const STORAGE_KEY      = 'gfi_objetos_contador';
+  const STORAGE_REFS_KEY = 'gfi_contador_refs'; // refs de objetos predefinidos
+
   let objetosPersonalizados = [];
-  let objetoSeleccionado   = null;
-  let fotoConteoBase64     = null;
-  let fotoConteoMime       = 'image/jpeg';
-  let contando             = false;
-  let resultadoActual      = null;
+  let objetoSeleccionado    = null;
+
+  // Foto de referencia (paso 1)
+  let fotoRefBase64  = null;
+  let fotoRefMime    = 'image/jpeg';
+  let refGuardada    = false; // si viene de storage
+
+  // Foto a contar (paso 2)
+  let fotoConteoBase64 = null;
+  let fotoConteoMime   = 'image/jpeg';
+
+  let contando        = false;
+  let resultadoActual = null;
 
   // ── ABRIR MODAL ───────────────────────────────────────────────
   function abrir(preseleccionado = null) {
     objetosPersonalizados = cargarObjetosPersonalizados();
-    fotoConteoBase64  = null;
-    resultadoActual   = null;
-    objetoSeleccionado = null;
+    _resetEstado();
 
     let modal = document.getElementById('modal-contador-ia');
     if (!modal) {
@@ -37,9 +60,8 @@ const ContadorIA = (() => {
     modal.classList.remove('hidden');
     requestAnimationFrame(() => modal.classList.add('visible'));
 
-    // Preseleccionar si se indicó
     if (preseleccionado) seleccionarObjeto(preseleccionado);
-    configurarInputFoto();
+    _vincularInputs();
   }
 
   function cerrar() {
@@ -49,7 +71,17 @@ const ContadorIA = (() => {
     setTimeout(() => modal.classList.add('hidden'), 280);
   }
 
-  // ── RENDER ────────────────────────────────────────────────────
+  function _resetEstado() {
+    fotoRefBase64    = null;
+    fotoRefMime      = 'image/jpeg';
+    refGuardada      = false;
+    fotoConteoBase64 = null;
+    fotoConteoMime   = 'image/jpeg';
+    resultadoActual  = null;
+    objetoSeleccionado = null;
+  }
+
+  // ── RENDER MODAL ─────────────────────────────────────────────
   function renderModal() {
     objetosPersonalizados = cargarObjetosPersonalizados();
     const todos = [...OBJETOS_PREDEF, ...objetosPersonalizados];
@@ -61,7 +93,7 @@ const ContadorIA = (() => {
         <button class="contador-cerrar" onclick="ContadorIA.cerrar()">✕</button>
       </div>
 
-      <!-- Selector de objeto -->
+      <!-- PASO 0: Selector de objeto -->
       <div class="contador-seccion">
         <p class="contador-label">¿Qué querés contar?</p>
         <div class="contador-chips" id="contador-chips">
@@ -70,7 +102,7 @@ const ContadorIA = (() => {
               onclick="ContadorIA.seleccionarObjeto('${o.id}')">
               <span class="chip-emoji">${o.emoji}</span>
               <span>${o.nombre}</span>
-              ${o.foto_ref ? '<span class="chip-ref-badge" title="Tiene foto de referencia">📎</span>' : ''}
+              ${_tieneRefGuardada(o.id) ? '<span class="chip-ref-badge" title="Tiene foto de referencia guardada">📎</span>' : ''}
             </button>
           `).join('')}
           <button class="chip-objeto chip-agregar" onclick="ContadorIA.mostrarFormPersonalizado()">
@@ -84,37 +116,74 @@ const ContadorIA = (() => {
       <div id="form-personalizado" class="contador-form-custom hidden">
         <input class="campo-input" id="custom-nombre" placeholder="Nombre del objeto (ej: Cajones)" maxlength="30">
         <input class="campo-input" id="custom-emoji" placeholder="Emoji (ej: 📦)" maxlength="4" style="width:70px">
-        <div class="contador-ref-upload">
-          <label class="btn-secondary btn-sm" for="input-foto-ref">
-            📎 Foto de referencia (opcional)
-          </label>
-          <input type="file" id="input-foto-ref" accept="image/*" class="hidden"
-            onchange="ContadorIA.cargarFotoReferencia(this)">
-          <span id="ref-status" class="ref-status-text"></span>
-        </div>
         <button class="btn-primary btn-sm" onclick="ContadorIA.guardarObjetoPersonalizado()">
           💾 Guardar objeto
         </button>
       </div>
 
-      <!-- Foto a contar -->
-      <div class="contador-seccion" id="sec-foto-contar">
-        <p class="contador-label">Foto a analizar</p>
-        <div class="contador-foto-area" id="foto-area" onclick="document.getElementById('input-foto-contar').click()">
-          <input type="file" id="input-foto-contar" accept="image/*" capture="environment" class="hidden"
-            onchange="ContadorIA.cargarFotoContar(this)">
+      <!-- PASO 1: Foto de referencia (aparece al seleccionar objeto) -->
+      <div class="contador-seccion contador-paso hidden" id="paso-1">
+        <div class="contador-paso-header">
+          <span class="contador-paso-badge">PASO 1</span>
+          <span class="contador-paso-titulo" id="paso1-titulo">📸 Foto de referencia</span>
+        </div>
+        <p class="contador-paso-desc" id="paso1-desc">Tomá una foto de un solo objeto de referencia para que la IA sepa exactamente qué buscar.</p>
+
+        <div class="contador-foto-area contador-foto-ref" id="foto-ref-area"
+             onclick="document.getElementById('input-foto-ref').click()">
+          <input type="file" id="input-foto-ref" accept="image/*" capture="environment" class="hidden">
+          <div id="foto-ref-wrap" class="foto-preview-empty">
+            <span class="foto-preview-icono">🎯</span>
+            <span class="foto-preview-texto">Tocá para tomar la foto de referencia</span>
+          </div>
+        </div>
+
+        <div class="contador-ref-acciones" id="ref-acciones" style="display:none">
+          <label class="btn-secondary btn-sm" for="input-foto-ref">🔄 Cambiar</label>
+          <button class="btn-secondary btn-sm" id="btn-guardar-ref" onclick="ContadorIA.guardarRefParaFuturo()">
+            💾 Guardar para futuros conteos
+          </button>
+          <button class="btn-secondary btn-sm" id="btn-saltear-paso1" onclick="ContadorIA.saltearRef()">
+            ⏭ Continuar sin referencia
+          </button>
+        </div>
+
+        <div class="ref-tip" id="ref-tip" style="display:none">
+          <span style="font-size:0.75rem;color:var(--texto-terciario)">
+            ✅ Referencia guardada de un uso anterior &nbsp;
+            <button class="btn-link-sm" onclick="ContadorIA._limpiarRefGuardada()">cambiar</button>
+          </span>
+        </div>
+
+        <!-- Botón para avanzar al paso 2 -->
+        <button class="btn-primary btn-full" id="btn-ir-paso2" onclick="ContadorIA.irAlPaso2()" disabled>
+          Siguiente: elegí la foto a contar →
+        </button>
+      </div>
+
+      <!-- PASO 2: Foto a contar -->
+      <div class="contador-seccion contador-paso hidden" id="paso-2">
+        <div class="contador-paso-header">
+          <span class="contador-paso-badge">PASO 2</span>
+          <span class="contador-paso-titulo">📸 Foto del conjunto a contar</span>
+        </div>
+        <p class="contador-paso-desc">Tomá o subí la foto que contiene todos los elementos a contar.</p>
+
+        <div class="contador-foto-area" id="foto-contar-area"
+             onclick="document.getElementById('input-foto-contar').click()">
+          <input type="file" id="input-foto-contar" accept="image/*" capture="environment" class="hidden">
           <div id="foto-preview-wrap" class="foto-preview-empty">
             <span class="foto-preview-icono">📸</span>
-            <span class="foto-preview-texto">Tocá para tomar o subir una foto</span>
+            <span class="foto-preview-texto">Tocá para tomar o subir la foto</span>
           </div>
         </div>
       </div>
 
-      <!-- Resultado -->
+      <!-- RESULTADO -->
       <div id="contador-resultado" class="contador-resultado hidden"></div>
 
       <!-- Botón contar -->
-      <button id="btn-contar" class="btn-primary btn-full" onclick="ContadorIA.contar()" disabled>
+      <button id="btn-contar" class="btn-primary btn-full hidden" onclick="ContadorIA.contar()" disabled>
         🔍 Contar con IA
       </button>
 
@@ -125,7 +194,7 @@ const ContadorIA = (() => {
         ${objetosPersonalizados.map(o => `
           <div class="objeto-custom-row">
             <span>${o.emoji} ${o.nombre}</span>
-            ${o.foto_ref ? '<span class="chip-ref-badge">📎 con referencia</span>' : ''}
+            ${_tieneRefGuardada(o.id) ? '<span class="chip-ref-badge">📎 con referencia</span>' : ''}
             <button class="btn-icon-sm btn-danger-sm" onclick="ContadorIA.eliminarObjeto('${o.id}')">🗑</button>
           </div>
         `).join('')}
@@ -137,9 +206,98 @@ const ContadorIA = (() => {
   // ── SELECCIÓN DE OBJETO ───────────────────────────────────────
   function seleccionarObjeto(id) {
     objetoSeleccionado = [...OBJETOS_PREDEF, ...cargarObjetosPersonalizados()].find(o => o.id === id);
+    if (!objetoSeleccionado) return;
+
+    // Resaltar chip
     document.querySelectorAll('#contador-chips .chip-objeto').forEach(c => c.classList.remove('activo'));
     document.getElementById(`chip-${id}`)?.classList.add('activo');
-    actualizarBotonContar();
+
+    // Reiniciar fotos
+    fotoRefBase64    = null;
+    fotoConteoBase64 = null;
+    resultadoActual  = null;
+
+    // Mostrar paso 1
+    _mostrarPaso1();
+  }
+
+  function _mostrarPaso1() {
+    const paso1 = document.getElementById('paso-1');
+    const paso2 = document.getElementById('paso-2');
+    const btnContar = document.getElementById('btn-contar');
+    const res = document.getElementById('contador-resultado');
+
+    if (paso2) paso2.classList.add('hidden');
+    if (btnContar) btnContar.classList.add('hidden');
+    if (res) { res.innerHTML = ''; res.classList.add('hidden'); }
+    if (paso1) paso1.classList.remove('hidden');
+
+    // Verificar si hay referencia guardada para este objeto
+    const refGuardadaObj = _cargarRefGuardada(objetoSeleccionado.id);
+    const titulo = document.getElementById('paso1-titulo');
+    const desc   = document.getElementById('paso1-desc');
+    const refTip = document.getElementById('ref-tip');
+    const refAcciones = document.getElementById('ref-acciones');
+    const btnIrPaso2 = document.getElementById('btn-ir-paso2');
+    const wrap = document.getElementById('foto-ref-wrap');
+
+    if (refGuardadaObj) {
+      // Ya tiene referencia guardada → mostrar thumbnail y habilitar siguente
+      fotoRefBase64 = refGuardadaObj.b64;
+      fotoRefMime   = refGuardadaObj.mime;
+      refGuardada   = true;
+
+      if (titulo) titulo.textContent = '🎯 Foto de referencia guardada';
+      if (desc) desc.textContent = 'Ya tenés una referencia guardada para este objeto. Podés usarla o reemplazarla.';
+      if (wrap) wrap.innerHTML = `<img src="data:${fotoRefMime};base64,${fotoRefBase64}" class="foto-preview-img" alt="Referencia guardada"><span class="ref-guardada-badge">📎 Guardada</span>`;
+      if (refTip) refTip.style.display = 'block';
+      if (refAcciones) refAcciones.style.display = 'none';
+      if (btnIrPaso2) { btnIrPaso2.disabled = false; btnIrPaso2.textContent = 'Siguiente: elegí la foto a contar →'; }
+    } else if (objetoSeleccionado.foto_ref_b64) {
+      // Objeto personalizado con foto embebida
+      fotoRefBase64 = objetoSeleccionado.foto_ref_b64;
+      fotoRefMime   = objetoSeleccionado.foto_ref_mime || 'image/jpeg';
+      refGuardada   = true;
+      if (wrap) wrap.innerHTML = `<img src="data:${fotoRefMime};base64,${fotoRefBase64}" class="foto-preview-img" alt="Referencia">`;
+      if (btnIrPaso2) { btnIrPaso2.disabled = false; }
+      if (refTip) refTip.style.display = 'block';
+      if (refAcciones) refAcciones.style.display = 'none';
+    } else {
+      // Sin referencia previa
+      if (titulo) titulo.textContent = `🎯 Foto de referencia — ${objetoSeleccionado.emoji} ${objetoSeleccionado.nombre}`;
+      if (desc) desc.textContent = 'Tomá una foto de un solo objeto de ejemplo. La IA lo usará como ancla visual para contar con precisión.';
+      if (refTip) refTip.style.display = 'none';
+      if (refAcciones) refAcciones.style.display = 'none';
+      if (btnIrPaso2) { btnIrPaso2.disabled = true; btnIrPaso2.textContent = 'Siguiente: elegí la foto a contar →'; }
+      if (wrap) wrap.innerHTML = `
+        <span class="foto-preview-icono">🎯</span>
+        <span class="foto-preview-texto">Tocá para tomar la foto de referencia</span>`;
+    }
+
+    _vincularInputs();
+  }
+
+  // ── NAVEGACIÓN ENTRE PASOS ────────────────────────────────────
+  function irAlPaso2() {
+    const paso1 = document.getElementById('paso-1');
+    const paso2 = document.getElementById('paso-2');
+    const btnContar = document.getElementById('btn-contar');
+
+    if (paso1) paso1.classList.add('hidden');
+    if (paso2) paso2.classList.remove('hidden');
+    if (btnContar) { btnContar.classList.remove('hidden'); btnContar.disabled = true; }
+
+    // Resetear foto de conteo
+    const wrap = document.getElementById('foto-preview-wrap');
+    if (wrap) wrap.innerHTML = `
+      <span class="foto-preview-icono">📸</span>
+      <span class="foto-preview-texto">Tocá para tomar o subir la foto</span>`;
+    fotoConteoBase64 = null;
+  }
+
+  function saltearRef() {
+    fotoRefBase64 = null;
+    irAlPaso2();
   }
 
   // ── FORMULARIO PERSONALIZADO ──────────────────────────────────
@@ -148,47 +306,26 @@ const ContadorIA = (() => {
     if (f) f.classList.toggle('hidden');
   }
 
-  let fotoRefBase64 = null;
-  let fotoRefMime   = 'image/jpeg';
-
-  function cargarFotoReferencia(input) {
-    const archivo = input?.files?.[0];
-    if (!archivo) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const resultado = e.target.result;
-      fotoRefBase64 = resultado.split(',')[1];
-      fotoRefMime   = archivo.type;
-      const st = document.getElementById('ref-status');
-      if (st) st.textContent = '✅ Referencia cargada';
-    };
-    reader.readAsDataURL(archivo);
-  }
-
   function guardarObjetoPersonalizado() {
     const nombre = document.getElementById('custom-nombre')?.value?.trim();
     const emoji  = document.getElementById('custom-emoji')?.value?.trim() || '📌';
     if (!nombre) { alert('Escribí el nombre del objeto'); return; }
 
     const nuevo = {
-      id:      `custom_${Date.now()}`,
+      id:             `custom_${Date.now()}`,
       nombre,
       emoji,
-      foto_ref:       fotoRefBase64 ? true : false,
-      foto_ref_b64:   fotoRefBase64 || null,
-      foto_ref_mime:  fotoRefMime,
-      prompt: `Contá todos los "${nombre}" visibles en esta imagen. Solo respondé con el número entero, sin texto adicional.`
+      promptFallback: `Contá todos los "${nombre}" visibles en esta imagen. Solo respondé con el número entero, sin texto adicional.`
     };
 
     const lista = cargarObjetosPersonalizados();
     lista.push(nuevo);
     guardarObjetosPersonalizados(lista);
 
-    fotoRefBase64 = null;
     const modal = document.getElementById('modal-contador-ia');
     if (modal) {
       modal.innerHTML = renderModal();
-      configurarInputFoto();
+      _vincularInputs();
       seleccionarObjeto(nuevo.id);
     }
     UI.mostrarToast(`✅ "${nombre}" guardado`, 'success');
@@ -197,16 +334,46 @@ const ContadorIA = (() => {
   function eliminarObjeto(id) {
     const lista = cargarObjetosPersonalizados().filter(o => o.id !== id);
     guardarObjetosPersonalizados(lista);
+    // También limpiar ref guardada
+    const refs = _cargarTodasRefs();
+    delete refs[id];
+    _guardarTodasRefs(refs);
+
     const modal = document.getElementById('modal-contador-ia');
-    if (modal) { modal.innerHTML = renderModal(); configurarInputFoto(); }
+    if (modal) { modal.innerHTML = renderModal(); _vincularInputs(); }
   }
 
-  // ── FOTO A CONTAR ─────────────────────────────────────────────
-  function configurarInputFoto() {
-    const input = document.getElementById('input-foto-contar');
-    if (input) {
-      input.onchange = function() { ContadorIA.cargarFotoContar(this); };
-    }
+  // ── CARGA DE FOTOS ────────────────────────────────────────────
+  function _vincularInputs() {
+    const inputRef = document.getElementById('input-foto-ref');
+    if (inputRef) inputRef.onchange = function() { _procesarFotoRef(this); };
+
+    const inputContar = document.getElementById('input-foto-contar');
+    if (inputContar) inputContar.onchange = function() { cargarFotoContar(this); };
+  }
+
+  function _procesarFotoRef(input) {
+    const archivo = input?.files?.[0];
+    if (!archivo) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const resultado = e.target.result;
+      fotoRefBase64 = resultado.split(',')[1];
+      fotoRefMime   = archivo.type;
+      refGuardada   = false;
+
+      // Mostrar preview
+      const wrap = document.getElementById('foto-ref-wrap');
+      if (wrap) wrap.innerHTML = `<img src="${resultado}" class="foto-preview-img" alt="Referencia">`;
+
+      // Habilitar botones
+      const refAcciones = document.getElementById('ref-acciones');
+      if (refAcciones) refAcciones.style.display = 'flex';
+
+      const btnIrPaso2 = document.getElementById('btn-ir-paso2');
+      if (btnIrPaso2) btnIrPaso2.disabled = false;
+    };
+    reader.readAsDataURL(archivo);
   }
 
   function cargarFotoContar(input) {
@@ -218,25 +385,49 @@ const ContadorIA = (() => {
       fotoConteoBase64 = resultado.split(',')[1];
       fotoConteoMime   = archivo.type;
 
-      // Mostrar preview
       const wrap = document.getElementById('foto-preview-wrap');
-      if (wrap) {
-        wrap.innerHTML = `<img src="${resultado}" class="foto-preview-img" alt="Foto a contar">`;
-      }
+      if (wrap) wrap.innerHTML = `<img src="${resultado}" class="foto-preview-img" alt="Foto a contar">`;
 
       // Limpiar resultado anterior
       const res = document.getElementById('contador-resultado');
-      if (res) { res.textContent = ''; res.classList.add('hidden'); }
+      if (res) { res.innerHTML = ''; res.classList.add('hidden'); }
       resultadoActual = null;
 
-      actualizarBotonContar();
+      // Habilitar botón contar
+      const btn = document.getElementById('btn-contar');
+      if (btn) btn.disabled = false;
     };
     reader.readAsDataURL(archivo);
   }
 
-  function actualizarBotonContar() {
-    const btn = document.getElementById('btn-contar');
-    if (btn) btn.disabled = !(objetoSeleccionado && fotoConteoBase64);
+  // ── GUARDAR REF PARA FUTURO ───────────────────────────────────
+  function guardarRefParaFuturo() {
+    if (!objetoSeleccionado || !fotoRefBase64) return;
+    const refs = _cargarTodasRefs();
+    refs[objetoSeleccionado.id] = { b64: fotoRefBase64, mime: fotoRefMime };
+    _guardarTodasRefs(refs);
+    refGuardada = true;
+
+    const btnGuardar = document.getElementById('btn-guardar-ref');
+    if (btnGuardar) { btnGuardar.textContent = '✅ Guardado'; btnGuardar.disabled = true; }
+
+    // Actualizar badge en el chip
+    const chip = document.getElementById(`chip-${objetoSeleccionado.id}`);
+    if (chip && !chip.querySelector('.chip-ref-badge')) {
+      chip.insertAdjacentHTML('beforeend', '<span class="chip-ref-badge">📎</span>');
+    }
+
+    UI.mostrarToast('📎 Referencia guardada para próximos conteos', 'success');
+  }
+
+  function _limpiarRefGuardada() {
+    if (!objetoSeleccionado) return;
+    const refs = _cargarTodasRefs();
+    delete refs[objetoSeleccionado.id];
+    _guardarTodasRefs(refs);
+    fotoRefBase64 = null;
+    refGuardada = false;
+    _mostrarPaso1();
   }
 
   // ── CONTEO IA ─────────────────────────────────────────────────
@@ -256,9 +447,12 @@ const ContadorIA = (() => {
       const cantidad = await llamarGemini();
       resultadoActual = cantidad;
 
+      const modoRef = fotoRefBase64 ? '🎯 con referencia visual' : '📝 por descripción';
+
       res.innerHTML = `
         <div class="resultado-numero">${cantidad}</div>
         <div class="resultado-label">${objetoSeleccionado.emoji} ${objetoSeleccionado.nombre} detectados</div>
+        <div class="resultado-modo">${modoRef}</div>
         <div class="resultado-acciones">
           <button class="btn-secondary btn-sm" onclick="ContadorIA.copiarResultado()">📋 Copiar</button>
           <button class="btn-primary btn-sm" onclick="ContadorIA.usarEnCarga()">✅ Usar en CARGAR</button>
@@ -278,28 +472,37 @@ const ContadorIA = (() => {
     const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_KEY && CONFIG.GEMINI_KEY !== 'TU_GEMINI_API_KEY')
       ? CONFIG.GEMINI_KEY : null;
 
-    // Modo demo (sin API Key)
+    // Modo demo (sin API Key real)
     if (!apiKey) {
-      await new Promise(r => setTimeout(r, 1500)); // Simula latencia
-      return Math.floor(Math.random() * 40) + 5;  // número demo
+      await new Promise(r => setTimeout(r, 1500));
+      return Math.floor(Math.random() * 20) + 1;
     }
 
-    // Construir partes según si hay foto de referencia
     const parts = [];
 
-    // Si el objeto personalizado tiene foto de referencia
-    if (objetoSeleccionado.foto_ref_b64) {
-      parts.push({ text: `IMAGEN 1: Es una foto de referencia que muestra el objeto que querés contar.\nIMAGEN 2: Es la foto real. Contá cuántos objetos iguales o similares al de la imagen 1 hay en la imagen 2. Solo respondé con el número entero, sin ningún texto adicional.` });
-      parts.push({ inline_data: { mime_type: objetoSeleccionado.foto_ref_mime || 'image/jpeg', data: objetoSeleccionado.foto_ref_b64 } });
+    if (fotoRefBase64) {
+      // ── MODO 2 FOTOS: máxima precisión ──────────────────────
+      // El modelo recibe la referencia visual y la foto real
+      parts.push({
+        text: `INSTRUCCIÓN CRÍTICA DE CONTEO:
+- La IMAGEN 1 es tu REFERENCIA VISUAL: muestra exactamente 1 (un) "${objetoSeleccionado.nombre}" que debés buscar.
+- La IMAGEN 2 es la foto real donde tenés que contar.
+- Tu única tarea: contar cuántos objetos VISUALMENTE IDÉNTICOS O MUY SIMILARES al de la IMAGEN 1 aparecen en la IMAGEN 2.
+- IGNORÁ completamente cualquier otro elemento, espacio vacío, recipiente o fondo aunque sea similar.
+- Respondé ÚNICAMENTE con el número entero. Cero texto adicional.`
+      });
+      parts.push({ inline_data: { mime_type: fotoRefMime, data: fotoRefBase64 } });
+      parts.push({ text: 'IMAGEN 2 (foto a contar):' });
     } else {
-      parts.push({ text: objetoSeleccionado.prompt });
+      // ── MODO 1 FOTO: fallback por descripción textual ────────
+      parts.push({ text: objetoSeleccionado.promptFallback });
     }
 
     parts.push({ inline_data: { mime_type: fotoConteoMime, data: fotoConteoBase64 } });
 
     const body = {
       contents: [{ role: 'user', parts }],
-      generationConfig: { maxOutputTokens: 20, temperature: 0.1 }
+      generationConfig: { maxOutputTokens: 10, temperature: 0.05 }
     };
 
     const r = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
@@ -312,7 +515,6 @@ const ContadorIA = (() => {
     const data = await r.json();
     const texto = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '0';
 
-    // Extraer número del texto (por si Gemini agrega palabras)
     const match = texto.match(/\d+/);
     if (!match) throw new Error('La IA no devolvió un número válido');
     return parseInt(match[0]);
@@ -329,7 +531,6 @@ const ContadorIA = (() => {
   function usarEnCarga() {
     if (resultadoActual === null) return;
     const campo = objetoSeleccionado?.id;
-    // Si estamos en el módulo de carga y el campo existe, lo actualiza
     if (campo === 'huevos' && typeof ModuloProduccion !== 'undefined') {
       ModuloProduccion.establecerValor('huevos', resultadoActual);
       cerrar();
@@ -338,9 +539,9 @@ const ContadorIA = (() => {
       UI.mostrarToast(`🐔 ${resultadoActual} gallinas detectadas`, 'info');
       cerrar();
     } else {
-      UI.mostrarToast(`✅ Resultado: ${resultadoActual} — copiado para usar`, 'success');
       copiarResultado();
       cerrar();
+      UI.mostrarToast(`✅ Resultado: ${resultadoActual} copiado`, 'success');
     }
   }
 
@@ -355,14 +556,37 @@ const ContadorIA = (() => {
     objetosPersonalizados = lista;
   }
 
+  function _cargarTodasRefs() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_REFS_KEY) || '{}'); }
+    catch { return {}; }
+  }
+
+  function _guardarTodasRefs(refs) {
+    localStorage.setItem(STORAGE_REFS_KEY, JSON.stringify(refs));
+  }
+
+  function _cargarRefGuardada(objetoId) {
+    const refs = _cargarTodasRefs();
+    return refs[objetoId] || null;
+  }
+
+  function _tieneRefGuardada(objetoId) {
+    const refs = _cargarTodasRefs();
+    return !!refs[objetoId];
+  }
+
+  // ── API PÚBLICA ───────────────────────────────────────────────
   return {
     abrir, cerrar,
     seleccionarObjeto,
+    irAlPaso2,
+    saltearRef,
     mostrarFormPersonalizado,
-    cargarFotoReferencia,
     guardarObjetoPersonalizado,
     eliminarObjeto,
     cargarFotoContar,
+    guardarRefParaFuturo,
+    _limpiarRefGuardada,
     contar,
     copiarResultado,
     usarEnCarga
