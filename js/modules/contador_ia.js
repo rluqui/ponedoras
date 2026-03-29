@@ -444,20 +444,32 @@ const ContadorIA = (() => {
     res.classList.add('hidden');
 
     try {
-      const cantidad = await llamarGemini();
+      const { cantidad, elementos } = await llamarGemini();
       resultadoActual = cantidad;
 
       const modoRef = fotoRefBase64 ? '🎯 con referencia visual' : '📝 por descripción';
 
+      // Construir el html del resultado
+      const hayCoords = elementos && elementos.length > 0;
       res.innerHTML = `
         <div class="resultado-numero">${cantidad}</div>
         <div class="resultado-label">${objetoSeleccionado.emoji} ${objetoSeleccionado.nombre} detectados</div>
-        <div class="resultado-modo">${modoRef}</div>
+        <div class="resultado-modo">${modoRef}${hayCoords ? ' · con mapa visual' : ''}</div>
+        ${hayCoords ? '<div id="canvas-etiquetas-wrap" class="canvas-etiquetas-wrap"></div>' : ''}
         <div class="resultado-acciones">
           <button class="btn-secondary btn-sm" onclick="ContadorIA.copiarResultado()">📋 Copiar</button>
           <button class="btn-primary btn-sm" onclick="ContadorIA.usarEnCarga()">✅ Usar en CARGAR</button>
         </div>`;
       res.classList.remove('hidden');
+
+      // Dibujar canvas con etiquetas si hay coordenadas
+      if (hayCoords) {
+        await _dibujarEtiquetasCanvas(
+          `data:${fotoConteoMime};base64,${fotoConteoBase64}`,
+          elementos,
+          'canvas-etiquetas-wrap'
+        );
+      }
     } catch (e) {
       res.innerHTML = `<div class="resultado-error">⚠️ ${e.message}</div>`;
       res.classList.remove('hidden');
@@ -475,34 +487,43 @@ const ContadorIA = (() => {
     // Modo demo (sin API Key real)
     if (!apiKey) {
       await new Promise(r => setTimeout(r, 1500));
-      return Math.floor(Math.random() * 20) + 1;
+      const cantDemo = Math.floor(Math.random() * 8) + 3;
+      const elementosDemo = Array.from({ length: cantDemo }, () => ({
+        cx: parseFloat((0.1 + Math.random() * 0.8).toFixed(3)),
+        cy: parseFloat((0.1 + Math.random() * 0.8).toFixed(3))
+      }));
+      return { cantidad: cantDemo, elementos: elementosDemo };
     }
 
     const parts = [];
 
-    if (fotoRefBase64) {
-      // ── MODO 2 FOTOS: máxima precisión ──────────────────────
-      // El modelo recibe la referencia visual y la foto real
-      parts.push({
-        text: `INSTRUCCIÓN CRÍTICA DE CONTEO:
+    // Prompt JSON con coordenadas
+    const instruccionBase = fotoRefBase64
+      ? `INSTRUCCIÓN CRÍTICA DE CONTEO CON REFERENCIA:
 - La IMAGEN 1 es tu REFERENCIA VISUAL: muestra exactamente 1 (un) "${objetoSeleccionado.nombre}" que debés buscar.
 - La IMAGEN 2 es la foto real donde tenés que contar.
-- Tu única tarea: contar cuántos objetos VISUALMENTE IDÉNTICOS O MUY SIMILARES al de la IMAGEN 1 aparecen en la IMAGEN 2.
-- IGNORÁ completamente cualquier otro elemento, espacio vacío, recipiente o fondo aunque sea similar.
-- Respondé ÚNICAMENTE con el número entero. Cero texto adicional.`
-      });
+- Tu única tarea: detectar todos los objetos VISUALMENTE IDÉNTICOS O MUY SIMILARES al de la IMAGEN 1 en la IMAGEN 2.
+- IGNORÁ completamente cualquier otro elemento, espacio vacío, recipiente o fondo.
+- Para cada objeto detectado en la IMAGEN 2 indicá su posición central como fracción (0.0 a 1.0) del ancho y alto de la imagen.
+- Respondé ÚNICAMENTE con este JSON (sin markdown, sin explicación):
+{"total": <número entero>, "elementos": [{"cx": 0.25, "cy": 0.40}, ...]}`
+      : `${objetoSeleccionado.promptFallback.replace('Solo respondé con el número entero.', '')}
+- Para cada objeto detectado indicá su posición central como fracción (0.0 a 1.0) del ancho y alto de la imagen.
+- Respondé ÚNICAMENTE con este JSON (sin markdown, sin explicación):
+{"total": <número entero>, "elementos": [{"cx": 0.25, "cy": 0.40}, ...]}`;
+
+    parts.push({ text: instruccionBase });
+
+    if (fotoRefBase64) {
       parts.push({ inline_data: { mime_type: fotoRefMime, data: fotoRefBase64 } });
       parts.push({ text: 'IMAGEN 2 (foto a contar):' });
-    } else {
-      // ── MODO 1 FOTO: fallback por descripción textual ────────
-      parts.push({ text: objetoSeleccionado.promptFallback });
     }
 
     parts.push({ inline_data: { mime_type: fotoConteoMime, data: fotoConteoBase64 } });
 
     const body = {
       contents: [{ role: 'user', parts }],
-      generationConfig: { maxOutputTokens: 10, temperature: 0.05 }
+      generationConfig: { maxOutputTokens: 1024, temperature: 0.05 }
     };
 
     const r = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
@@ -513,11 +534,155 @@ const ContadorIA = (() => {
 
     if (!r.ok) throw new Error(`Error de API (${r.status})`);
     const data = await r.json();
-    const texto = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '0';
+    const texto = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
+    // Intentar parsear JSON de coordenadas
+    try {
+      // Limpiar posible markdown code block
+      const jsonLimpio = texto.replace(/```json|```/gi, '').trim();
+      const parsed = JSON.parse(jsonLimpio);
+      if (typeof parsed.total === 'number' && Array.isArray(parsed.elementos)) {
+        return { cantidad: parsed.total, elementos: parsed.elementos };
+      }
+    } catch (_) { /* continúa al fallback */ }
+
+    // Fallback: solo número
     const match = texto.match(/\d+/);
     if (!match) throw new Error('La IA no devolvió un número válido');
-    return parseInt(match[0]);
+    return { cantidad: parseInt(match[0]), elementos: [] };
+  }
+
+  // ── CANVAS CON ETIQUETAS NUMERADAS ──────────────────────────────
+  async function _dibujarEtiquetasCanvas(dataUrl, elementos, wrapId) {
+    const wrap = document.getElementById(wrapId);
+    if (!wrap) return;
+
+    // Cargar imagen en un objeto Image
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+
+    // Canvas con tamaño proporcional (máx 400px de ancho en mobile)
+    const MAX_W = Math.min(wrap.clientWidth || 380, 500);
+    const escala = MAX_W / img.naturalWidth;
+    const W = Math.round(img.naturalWidth * escala);
+    const H = Math.round(img.naturalHeight * escala);
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = W;
+    canvas.height = H;
+    canvas.style.cssText = 'width:100%;border-radius:10px;display:block;';
+    wrap.innerHTML = '';
+    wrap.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, W, H);
+
+    // ── Parámetros de estilo ─────────────────────────
+    const RADIO_PUNTO  = 5;          // círculo en el objeto
+    const ETIQ_W       = 26;         // ancho etiqueta
+    const ETIQ_H       = 20;         // alto etiqueta
+    const MARGEN       = 10;         // separación respecto al punto
+    const RADIO_ETIQ   = 4;          // radio borde etiqueta
+    const COLORES = [
+      '#FF5252','#FF9800','#FFEB3B','#66BB6A',
+      '#26C6DA','#7E57C2','#EC407A','#29B6F6'
+    ];
+
+    // Pre-calcular posiciones de cada etiqueta con anti-colisión
+    const ocupados = []; // [{x,y,w,h}]
+
+    // Cuadrantes de offset para la etiqueta: derecha-arriba, derecha-abajo, izq-arriba, izq-abajo
+    const OFFSETS = [
+      [ MARGEN, -ETIQ_H - MARGEN],
+      [ MARGEN,  MARGEN],
+      [-ETIQ_W - MARGEN, -ETIQ_H - MARGEN],
+      [-ETIQ_W - MARGEN,  MARGEN],
+      [ MARGEN, -ETIQ_H / 2],
+      [-ETIQ_W - MARGEN, -ETIQ_H / 2]
+    ];
+
+    function colisiona(rect) {
+      for (const o of ocupados) {
+        if (rect.x < o.x + o.w && rect.x + rect.w > o.x &&
+            rect.y < o.y + o.h && rect.y + rect.h > o.y) return true;
+      }
+      return false;
+    }
+
+    function dentroCanvas(rect) {
+      return rect.x >= 2 && rect.y >= 2 &&
+             rect.x + rect.w <= W - 2 && rect.y + rect.h <= H - 2;
+    }
+
+    function elegirPosEtiqueta(px, py) {
+      for (const [dx, dy] of OFFSETS) {
+        const r = { x: px + dx, y: py + dy, w: ETIQ_W, h: ETIQ_H };
+        if (dentroCanvas(r) && !colisiona(r)) return r;
+      }
+      // Sin espacio libre → poner arriba-derecha y aceptar superposición
+      return { x: Math.min(px + MARGEN, W - ETIQ_W - 2), y: Math.max(py - ETIQ_H - MARGEN, 2), w: ETIQ_W, h: ETIQ_H };
+    }
+
+    // Dibujar todos los elementos
+    elementos.forEach((el, idx) => {
+      const px = Math.round(el.cx * W);
+      const py = Math.round(el.cy * H);
+      const color = COLORES[idx % COLORES.length];
+      const num = idx + 1;
+
+      const rect = elegirPosEtiqueta(px, py);
+      ocupados.push(rect);
+
+      // Punto en el objeto (anillo + relleno)
+      ctx.beginPath();
+      ctx.arc(px, py, RADIO_PUNTO + 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(px, py, RADIO_PUNTO, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Línea conectora desde punto al borde más cercano de la etiqueta
+      const etiqCx = rect.x + rect.w / 2;
+      const etiqCy = rect.y + rect.h / 2;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(etiqCx, etiqCy);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Fondo de la etiqueta con sombra
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur  = 4;
+      ctx.beginPath();
+      ctx.roundRect(rect.x, rect.y, rect.w, rect.h, RADIO_ETIQ);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Borde blanco
+      ctx.beginPath();
+      ctx.roundRect(rect.x, rect.y, rect.w, rect.h, RADIO_ETIQ);
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Número
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${num < 10 ? 12 : 10}px 'Inter', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(num), rect.x + rect.w / 2, rect.y + rect.h / 2 + 0.5);
+    });
   }
 
   // ── ACCIONES DEL RESULTADO ────────────────────────────────────
