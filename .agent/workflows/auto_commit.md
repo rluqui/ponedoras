@@ -3,7 +3,7 @@ description: commit automático después de cada modificación de código
 ---
 
 // turbo-all
-# Auto-commit post modificación
+# Auto-commit y push post modificación
 
 Después de CADA modificación de archivos del proyecto, ejecutar automáticamente:
 
@@ -23,7 +23,11 @@ git add -A
 git commit -m "[módulo]: descripción del cambio"
 ```
 
-3. Confirmar el commit mostrando el hash corto y el mensaje.
+3. Hacer push al repositorio remoto para que Vercel dispare el deploy automáticamente
+```
+git push origin main
+```
 
-> IMPORTANTE: Nunca hacer push automático. Solo commit local.
-> Si hay múltiples archivos modificados en una misma tarea, agruparlos en un solo commit.
+4. Confirmar mostrando el hash corto del commit y que el push fue exitoso.
+
+> Si hay múltiples archivos modificados en una misma tarea, agruparlos en un solo commit antes del push.
