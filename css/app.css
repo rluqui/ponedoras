@@ -3169,3 +3169,96 @@ select.campo-input option { background: var(--verde-medio); color: var(--texto-p
   max-height: 400px;
   object-fit: contain;
 }
+
+/* ── Modo Asistido: glow-pulse para botón próximo paso ─────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(100, 220, 120, 0.0); transform: scale(1); }
+  50%       { box-shadow: 0 0 16px 5px rgba(100, 220, 120, 0.5); transform: scale(1.015); }
+}
+.btn-glow-activo {
+  animation: glow-pulse 1.5s ease-in-out infinite;
+  position: relative;
+}
+.btn-glow-activo:hover,
+.btn-glow-activo:disabled,
+.btn-glow-activo[disabled] {
+  animation: none;
+  transform: none;
+}
+
+/* Banner contextual de inducción (modo asistido) */
+.banner-induccion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(100, 220, 120, 0.12);
+  border: 1px solid rgba(100, 220, 120, 0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: var(--texto-secundario, #b0c4b8);
+  margin: 6px 0 4px;
+  animation: fadeInUp 0.3s ease;
+}
+.banner-induccion .banner-icono {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Toggle estilo switch para configuracion */
+.config-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.config-toggle-row:last-child { border-bottom: none; }
+.config-toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.config-toggle-label strong {
+  font-size: 0.9rem;
+  color: var(--texto-primario, #e8f5e9);
+}
+.config-toggle-label span {
+  font-size: 0.75rem;
+  color: var(--texto-terciario, #78909c);
+}
+.switch-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.switch-toggle input { opacity: 0; width: 0; height: 0; }
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s;
+}
+.switch-toggle input:checked + .switch-slider {
+  background: #66BB6A;
+}
+.switch-toggle input:checked + .switch-slider::before {
+  transform: translateX(20px);
+}

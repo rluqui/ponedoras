@@ -186,6 +186,25 @@ const ModuloConfiguracion = (() => {
         </button>
       </div>
 
+      <!-- Preferencias de interfaz -->
+      <div class="config-seccion">
+        <h3 class="config-titulo-sec">🎛️ Preferencias de interfaz</h3>
+        <p class="config-desc">Personalizá cómo se comporta la aplicación.</p>
+
+        <div class="config-toggle-row">
+          <div class="config-toggle-label">
+            <strong>🧭 Guía visual de pasos</strong>
+            <span>Resalta el próximo paso en los flujos. Ideal para usuarios nuevos.</span>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="cfg-modo-asistido"
+              ${_leerModoAsistido() ? 'checked' : ''}
+              onchange="ModuloConfiguracion.toggleModoAsistido(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+
     </div>`;
   }
 
@@ -531,14 +550,27 @@ Consultanos por cantidad y precio 👇</textarea>`;
     localStorage.setItem('gfi_config', JSON.stringify(data));
   }
 
+  // ── MODO ASISTIDO ─────────────────────────────────────────────
+  function _leerModoAsistido() {
+    const val = localStorage.getItem('gfi_modo_asistido');
+    return val === null ? true : val === 'true'; // true por defecto
+  }
+
+  function toggleModoAsistido(activo) {
+    localStorage.setItem('gfi_modo_asistido', String(activo));
+    const etiqueta = activo ? '🧭 Guía visual activada' : '🧭 Guía visual desactivada';
+    UI.mostrarToast(etiqueta, activo ? 'success' : 'info');
+  }
+
   // API PÚBLICA para acceso desde otros módulos
   function obtenerConfig() { return cargarConfigLocal(); }
+  function modoAsistidoActivo() { return _leerModoAsistido(); }
 
   return {
     render, postRender,
     guardarGranja, guardarPrecios, nuevoGalpon,
     seleccionarTipo, copiarTexto, cerrarSesion, limpiarBD,
-    obtenerConfig,
+    obtenerConfig, modoAsistidoActivo, toggleModoAsistido,
     mostrarFormGallinero, editarGallinero, guardarGallinero,
     archivarGallinero, cancelarFormGallinero,
     aprobar, rechazar, cambiarPlan

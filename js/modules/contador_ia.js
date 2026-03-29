@@ -43,6 +43,22 @@ const ContadorIA = (() => {
   let contando        = false;
   let resultadoActual = null;
 
+  // ── MODO ASISTIDO ────────────────────────────────────────────────
+  function _modoAsistidoActivo() {
+    const val = localStorage.getItem('gfi_modo_asistido');
+    return val === null ? true : val === 'true';
+  }
+
+  function _aplicarGlow(el) {
+    if (!el || !_modoAsistidoActivo()) return;
+    el.classList.add('btn-glow-activo');
+  }
+
+  function _quitarGlow(el) {
+    if (!el) return;
+    el.classList.remove('btn-glow-activo');
+  }
+
   // ── ABRIR MODAL ───────────────────────────────────────────────
   function abrir(preseleccionado = null) {
     objetosPersonalizados = cargarObjetosPersonalizados();
@@ -110,6 +126,11 @@ const ContadorIA = (() => {
             <span>Nuevo</span>
           </button>
         </div>
+        ${_modoAsistidoActivo() ? `
+        <div class="banner-induccion">
+          <span class="banner-icono">👆</span>
+          <span>Seleccioná qué querés contar para comenzar</span>
+        </div>` : ''}
       </div>
 
       <!-- Formulario objeto personalizado (oculto por defecto) -->
@@ -252,14 +273,14 @@ const ContadorIA = (() => {
       if (wrap) wrap.innerHTML = `<img src="data:${fotoRefMime};base64,${fotoRefBase64}" class="foto-preview-img" alt="Referencia guardada"><span class="ref-guardada-badge">📎 Guardada</span>`;
       if (refTip) refTip.style.display = 'block';
       if (refAcciones) refAcciones.style.display = 'none';
-      if (btnIrPaso2) { btnIrPaso2.disabled = false; btnIrPaso2.textContent = 'Siguiente: elegí la foto a contar →'; }
+      if (btnIrPaso2) { btnIrPaso2.disabled = false; btnIrPaso2.textContent = 'Siguiente: elegí la foto a contar →'; _aplicarGlow(btnIrPaso2); }
     } else if (objetoSeleccionado.foto_ref_b64) {
       // Objeto personalizado con foto embebida
       fotoRefBase64 = objetoSeleccionado.foto_ref_b64;
       fotoRefMime   = objetoSeleccionado.foto_ref_mime || 'image/jpeg';
       refGuardada   = true;
       if (wrap) wrap.innerHTML = `<img src="data:${fotoRefMime};base64,${fotoRefBase64}" class="foto-preview-img" alt="Referencia">`;
-      if (btnIrPaso2) { btnIrPaso2.disabled = false; }
+      if (btnIrPaso2) { btnIrPaso2.disabled = false; _aplicarGlow(btnIrPaso2); }
       if (refTip) refTip.style.display = 'block';
       if (refAcciones) refAcciones.style.display = 'none';
     } else {
@@ -281,7 +302,11 @@ const ContadorIA = (() => {
   function irAlPaso2() {
     const paso1 = document.getElementById('paso-1');
     const paso2 = document.getElementById('paso-2');
+    const btnIrPaso2 = document.getElementById('btn-ir-paso2');
     const btnContar = document.getElementById('btn-contar');
+
+    // Quitar glow del paso anterior
+    _quitarGlow(btnIrPaso2);
 
     if (paso1) paso1.classList.add('hidden');
     if (paso2) paso2.classList.remove('hidden');
@@ -371,7 +396,7 @@ const ContadorIA = (() => {
       if (refAcciones) refAcciones.style.display = 'flex';
 
       const btnIrPaso2 = document.getElementById('btn-ir-paso2');
-      if (btnIrPaso2) btnIrPaso2.disabled = false;
+      if (btnIrPaso2) { btnIrPaso2.disabled = false; _aplicarGlow(btnIrPaso2); }
     };
     reader.readAsDataURL(archivo);
   }
@@ -395,7 +420,7 @@ const ContadorIA = (() => {
 
       // Habilitar botón contar
       const btn = document.getElementById('btn-contar');
-      if (btn) btn.disabled = false;
+      if (btn) { btn.disabled = false; _aplicarGlow(btn); }
     };
     reader.readAsDataURL(archivo);
   }
@@ -440,6 +465,7 @@ const ContadorIA = (() => {
 
     contando = true;
     btn.disabled = true;
+    _quitarGlow(btn);
     btn.innerHTML = '⏳ Analizando…';
     res.classList.add('hidden');
 
@@ -470,6 +496,10 @@ const ContadorIA = (() => {
           'canvas-etiquetas-wrap'
         );
       }
+
+      // Glow en botón 'Usar en CARGAR'
+      const btnUsarEnCarga = res.querySelector('button.btn-primary');
+      _aplicarGlow(btnUsarEnCarga);
     } catch (e) {
       res.innerHTML = `<div class="resultado-error">⚠️ ${e.message}</div>`;
       res.classList.remove('hidden');
