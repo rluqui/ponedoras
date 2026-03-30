@@ -264,6 +264,16 @@ const ModuloProduccion = (() => {
     const btn = document.getElementById('btn-guardar-prod');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Guardando…'; }
 
+    // 🛡️ Agente de Excepciones Productivas (Anomaly Detection)
+    const maxLogico = Math.ceil((datosForm.cantidad_aves || 0) * 1.1); // 10% margen por atraso
+    if (datosForm.cantidad_aves > 0 && datosForm.huevos > maxLogico) {
+      const msj = `🚨 ALERTA BIOLÓGICA:\nCargaste ${datosForm.huevos} huevos, pero solo tenés ${datosForm.cantidad_aves} aves (máx esperado ~${maxLogico}).\n\n¿Estás completamente seguro de que el conteo es correcto?`;
+      if (!window.confirm(msj)) {
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Guardar el día'; }
+        return;
+      }
+    }
+
     const registro = {
       fecha:           datosForm.fecha,
       galpon_id:       datosForm.galpon_id,

@@ -407,20 +407,48 @@ const ContadorIA = (() => {
     const reader = new FileReader();
     reader.onload = e => {
       const resultado = e.target.result;
-      fotoConteoBase64 = resultado.split(',')[1];
-      fotoConteoMime   = archivo.type;
+      
+      // 🛡️ Agente QA de Cámara (Auditor Visual)
+      const img = new Image();
+      img.onload = () => {
+         const canvas = document.createElement('canvas');
+         const ctx = canvas.getContext('2d');
+         const maxW = 100; // procesar versión muy chica para velocidad
+         const esc = maxW / img.width;
+         canvas.width = maxW;
+         canvas.height = img.height * esc || 1;
+         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+         
+         const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+         let suma = 0;
+         for(let i=0; i<data.length; i+=4) {
+            suma += (0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2]);
+         }
+         const luminanciaPromedio = suma / (data.length / 4);
 
-      const wrap = document.getElementById('foto-preview-wrap');
-      if (wrap) wrap.innerHTML = `<img src="${resultado}" class="foto-preview-img" alt="Foto a contar">`;
+         const wrap = document.getElementById('foto-preview-wrap');
+         const res = document.getElementById('contador-resultado');
+         const btn = document.getElementById('btn-contar');
 
-      // Limpiar resultado anterior
-      const res = document.getElementById('contador-resultado');
-      if (res) { res.innerHTML = ''; res.classList.add('hidden'); }
-      resultadoActual = null;
+         // Umbral de oscuridad extrema (configurable, 25/255)
+         if (luminanciaPromedio < 25) {
+            if (wrap) wrap.innerHTML = `<span class="foto-preview-icono">🌑</span><span class="foto-preview-texto" style="color:#ff9800">Foto demasiado oscura. Activá el flash o prendé la luz.</span>`;
+            if (res) { res.innerHTML = ''; res.classList.add('hidden'); }
+            fotoConteoBase64 = null;
+            if (btn) { btn.disabled = true; _quitarGlow(btn); }
+            if (typeof UI !== 'undefined') UI.mostrarToast('🌑 Foto rechazada: muy oscura', 'warning');
+            return;
+         }
 
-      // Habilitar botón contar
-      const btn = document.getElementById('btn-contar');
-      if (btn) { btn.disabled = false; _aplicarGlow(btn); }
+         // Aceptada
+         fotoConteoBase64 = resultado.split(',')[1];
+         fotoConteoMime   = archivo.type;
+         if (wrap) wrap.innerHTML = `<img src="${resultado}" class="foto-preview-img" alt="Foto a contar">`;
+         if (res) { res.innerHTML = ''; res.classList.add('hidden'); }
+         resultadoActual = null;
+         if (btn) { btn.disabled = false; _aplicarGlow(btn); }
+      };
+      img.src = resultado;
     };
     reader.readAsDataURL(archivo);
   }

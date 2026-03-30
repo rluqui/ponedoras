@@ -160,6 +160,41 @@ const DB = (() => {
     return { ok: !error, error };
   }
 
+  // ── GUARDIÁN OFFLINE ──────────────────────────────────────────
+  async function sincronizarDatosOffline() {
+    const db = obtenerSupabase();
+    if (!db || !navigator.onLine) return;
+    const colaStr = localStorage.getItem('gfi_offline_queue');
+    if (!colaStr) return;
+    try {
+      let cola = JSON.parse(colaStr);
+      if (!Array.isArray(cola) || !cola.length) return;
+      console.log("⚡ Sincronizando", cola.length, "registros offline...");
+      let exitosos = 0;
+      let fallidos = [];
+      for (const item of cola) {
+         const { error } = await db.from('produccion_diaria')
+            .upsert([item], { onConflict: 'granja_id,fecha,galpon' });
+         if (!error) exitosos++;
+         else fallidos.push(item); // guardamos los que fallaron por ej RLS
+      }
+      if (fallidos.length === 0) {
+        localStorage.removeItem('gfi_offline_queue');
+      } else {
+        localStorage.setItem('gfi_offline_queue', JSON.stringify(fallidos));
+      }
+      if (exitosos > 0) {
+        if (typeof UI !== 'undefined') UI.mostrarToast(`⚡ Se sincronizaron ${exitosos} registros guardados sin conexión.`, 'success');
+      }
+    } catch (e) {
+      console.error("Error sincronizando offline:", e);
+    }
+  }
+
+  // Disparadores automáticos del Guardián
+  setTimeout(() => sincronizarDatosOffline(), 4000);
+  window.addEventListener('online', sincronizarDatosOffline);
+
   async function insertarProduccion(registro) {
     const db = obtenerSupabase();
     if (!db) return { ok: true };  // Demo: simular éxito
@@ -191,20 +226,32 @@ const DB = (() => {
         .upsert([{...payload, granja_id: tenant}], { onConflict: 'granja_id,fecha,galpon' })
         .select();
 
-    if (error && error.message.includes('row-level security')) {
-       console.error("RLS Detail:", error);
-       // Hacemos un check "en vivo" a la DB para ver por qué rebotó la seguridad:
-       const u = Auth.obtenerUsuario();
-       const { data: pDB } = await db.from('perfiles').select('granja_id').eq('id', u?.id).single();
-       if (!pDB || !pDB.granja_id) {
-           alert("🚨 ALERTA DB: Tu perfil en el servidor tiene 'granja_id' en NULL. \nFijate de ejecutar el script 15_saas_data_migration.sql en Supabase para arreglarlo.");
-       } else if (pDB.granja_id !== tenant) {
-           alert(`🚨 ALERTA Auth: El ID de granja de tu teléfono (${tenant}) no coincide con el de la Base de Datos (${pDB.granja_id}). \nCERRÁ SESIÓN y volvé a entrar.`);
-       } else {
-           alert("🚨 Error RLS desconocido: Tu granja_id es correcto pero la base lo rechaza. Revisá las políticas 'saas_aislamiento_multitenant'.");
+    if (error) {
+       const isNetError = error.message.toLowerCase().includes('fetch') || error.message.toLowerCase().includes('network') || !navigator.onLine;
+       // Guardián Offline: Si falla por red, interceptar y guardar local
+       if (isNetError) {
+           let cola = [];
+           try { cola = JSON.parse(localStorage.getItem('gfi_offline_queue') || '[]'); } catch(e){}
+           cola.push({...payload, granja_id: tenant});
+           localStorage.setItem('gfi_offline_queue', JSON.stringify(cola));
+           if (typeof UI !== 'undefined') UI.mostrarToast("📵 Sin conexión. Registros guardados localmente para sincronizar luego.", "info");
+           return { ok: true, offline: true };
        }
-    } else if (error) {
-       alert("DB Error: " + error.message);
+
+       if (error.message.includes('row-level security')) {
+           console.error("RLS Detail:", error);
+           const u = Auth.obtenerUsuario();
+           const { data: pDB } = await db.from('perfiles').select('granja_id').eq('id', u?.id).single();
+           if (!pDB || !pDB.granja_id) {
+               alert("🚨 ALERTA DB: Tu perfil en el servidor tiene 'granja_id' en NULL. \nFijate de ejecutar el script 15_saas_data_migration.sql en Supabase para arreglarlo.");
+           } else if (pDB.granja_id !== tenant) {
+               alert(`🚨 ALERTA Auth: El ID de granja de tu teléfono (${tenant}) no coincide con el de la Base de Datos (${pDB.granja_id}). \nCERRÁ SESIÓN y volvé a entrar.`);
+           } else {
+               alert("🚨 Error RLS desconocido: Tu granja_id es correcto pero la base lo rechaza. Revisá las políticas 'saas_aislamiento_multitenant'.");
+           }
+       } else {
+           alert("DB Error: " + error.message);
+       }
     }
 
     return { ok: !error, error };
