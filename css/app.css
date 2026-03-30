@@ -3286,3 +3286,16 @@ select.campo-input option { background: var(--verde-medio); color: var(--texto-p
   background: #333; color: white; border: none;
   padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;
 }
+/ *  
+ T o o l t i p s  
+ c u s t o m i z a d o s  
+ S a a S  
+ * /  
+ [ d a t a - t o o l t i p ]  
+   p o s i t i o n :   r e l a t i v e ;    
+ c u r s o r :   h e l p ;    
+ 
+/* Tooltips customizados SaaS */
+[data-tooltip] { position: relative; cursor: help; }
+[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #1f2937; color: #ffffff; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; white-space: normal; width: max-content; max-width: 220px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.5); z-index: 1000; pointer-events: none; opacity: 1; font-weight: normal; font-family: 'Inter', sans-serif; letter-spacing: normal; }
+[data-tooltip]:hover::before { content: ' '; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: #1f2937 transparent transparent transparent; opacity: 1; pointer-events: none; z-index: 1000; }

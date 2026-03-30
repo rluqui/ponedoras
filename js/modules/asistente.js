@@ -38,12 +38,12 @@ NIVEL DEL PRODUCTOR:
 - Nivel 3 — En Crecimiento: acceso completo
 - Nivel 4 — Microempresa: reportes avanzados
 
-TONO:
-- Simple, cálido, cercano, rural
-- Sin tecnicismos innecesarios
-- Respuestas cortas y directas (máximo 4 párrafos)
-- Usás palabras del campo argentino cuando es apropiado
-- Siempre orientás a la acción práctica
+TONO Y ESTILO:
+- Simple, cálido, cercano, rural y MUY DIDÁCTICO. Es fundamental que asumas que el productor no sabe NADA y arranca desde cero.
+- Tus respuestas deben ser DETALLADAS Y EXHAUSTIVAS, guiando paso a paso.
+- Cuando hables de alimentación, vacunas o insumos, RECOMENDÁ MARCAS COMERCIALES CONCRETAS (ej: Gepsa, Cargill, Alimentos Pilar, Ganave, Biogénesis, etc) y productos específicos que puedan pedir en la veterinaria o forrajería.
+- Sin tecnicismos innecesarios, pero explicando el "por qué" de las cosas.
+- Usás palabras del campo argentino cuando es apropiado.
 
 CAPACIDADES:
 - Ayudás a navegar la app ("Para cargar los huevos, tocá el botón CARGAR")
@@ -299,7 +299,7 @@ IMPORTANTE:
 
     // ── ALIMENTO POR EDAD DEL LOTE ───────────────────────────────
     if (p.includes('alimento') || p.includes('comida') || p.includes('ración') || p.includes('comer') || p.includes('edad') || p.includes('semana'))
-      return '🌾 **Alimento por etapa:**\n• **0-8 semanas** (pollita): Iniciador 22% proteína. 20-30g/día.\n• **8-16 semanas** (recría): Crecimiento 18% proteína. 50-60g/día. Limitá calcio.\n• **16+ semanas** (prelote): Preponer o postura inicial. Aumentá calcio.\n• **Postura activa**: Ponedoras 16% proteína + 3.5-4% calcio. 100-120g/día.\n\n*El calcio es clave para la cáscara. Sin calcio, cáscara blanda = menos valor.* ¿Cuántas semanas tiene tu lote?';
+      return '🌾 **Alimentación paso a paso para principiantes:**\n\nSi recién arrancás, lo más fácil y seguro es comprar **alimento balanceado comercial ya preparado** en la forrajería (marcas excelentes son Gepsa, Alimentos Pilar, Cargill o Ganave). Pedilos exactamente así según la edad que tengan tus gallinas:\n\n• **1. Iniciador (0 a 8 semanas de vida):** Pedí "Iniciador para ponedoras". Viene en polvo o micro-pellet con mucha proteína (22%) para que crezcan fuertes. Dales unos 20 a 30 gramos por pollita al día.\n\n• **2. Recría / Crecimiento (8 a 16 semanas):** Pedí "Alimento de Recría". Baja la proteína al 18% para que no engorden de golpe y no tiene casi calcio para no dañarles los riñones. Acá comerán unos 50 a 60 gramos por día.\n\n• **3. Pre-postura (16 a 18 semanas):** Es una etapa cortita de transición donde se les empieza a meter calcio. Pedí "Alimento Pre-postura" o mezclale conchas de ostra picada.\n\n• **4. Postura Activa (cuando empiezan a poner huevos):** Pedí "Alimento Alta Postura Fase 1". Este tiene 16% de proteína y muchísimo calcio (4%) que es fundamental para que la cáscara del huevo sea dura. Pasado el pico de producción (Fase 2) cambian a otro. Una gallina adulta come entre 100 y 120 gramos exactos por día.\n\n*💡 Consejo de Don Pepe:* Si les falta calcio, van a poner huevos con cáscara blanda. Podes comprar "Conchilla" suelta en la veterinaria y ponerles un tachito extra.\n\n¿Cuántas semanas tiene tu lote actualmente así te digo qué bolsa comprar?';
 
     // ── PRODUCCIÓN Y APP ─────────────────────────────────────────
     if (p.includes('cargar') || (p.includes('huevo') && !p.includes('vacuna')))

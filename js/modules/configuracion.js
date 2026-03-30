@@ -4,6 +4,15 @@ const ModuloConfiguracion = (() => {
   const TIPOS_PRODUCCION = ['Jaula', 'Piso', 'Campero', 'Granja', 'Orgánico', 'Mixto'];
   const ZONAS = ['Rivadavia', 'Junín', 'San Martín', 'Mendoza Capital', 'San Rafael', 'Otro'];
 
+  const DESC_TIPOS = {
+    'Jaula': 'Sistema tradicional en batería. Mayor densidad, menor movimiento.',
+    'Piso': 'Las aves se mueven libres dentro de un galpón cerrado.',
+    'Campero': 'Aves con acceso a piquetes de pastoreo libre en exteriores.',
+    'Granja': 'Producción de tipo familiar o semiextensiva.',
+    'Orgánico': 'Aves libres alimentadas con certificación sin químicos.',
+    'Mixto': 'Combinación de diferentes sistemas o corrales.'
+  };
+
   // ── RENDER ────────────────────────────────────────────────────
   function render() {
     const granja = cargarConfigLocal();
@@ -29,6 +38,7 @@ const ModuloConfiguracion = (() => {
           <div class="rol-selector" id="cfg-tipo-selector">
             ${TIPOS_PRODUCCION.map(t => `
             <button class="rol-opcion ${(granja.tipo_produccion||'Piso')===t?'seleccionado':''}"
+              data-tooltip="${DESC_TIPOS[t]}"
               onclick="ModuloConfiguracion.seleccionarTipo('${t}',this)">${t}</button>
             `).join('')}
           </div>
