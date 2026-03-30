@@ -128,8 +128,13 @@ const ModuloConfiguracion = (() => {
         </div>
 
         <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--color-border);">
-          <h4 style="font-size:0.85rem; color:var(--color-texto-sec); margin-bottom:8px;">🤖 Asistente Virtual Inteligente (API Key)</h4>
-          <p class="config-desc" style="margin-bottom:8px">Pegá tu API Key de Gemini para activar las respuestas inteligentes personalizadas.</p>
+          <h4 style="font-size:0.85rem; color:var(--color-texto-sec); margin-bottom:8px;">🤖 Inteligencia Artificial (Lector de Cámara)</h4>
+          <p class="config-desc" style="margin-bottom:12px; line-height:1.4">
+            Para que el celular pueda "ver" tus maples y contar los huevos automáticamente <strong>totalmente gratis</strong>, necesita conectarse al cerebro de Inteligencia Artificial de Google (Gemini) a través de una llave secreta.<br><br>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#2196F3; font-weight:bold; text-decoration:underline;">👉 Hacé clic acá para Generar tu Llave en Google (es gratis)</a>
+            <br><br>
+            Copiá el texto largo que empieza con "AIza..." y pegalo acá abajo:
+          </p>
           <div style="display:flex;gap:8px;">
             <input class="campo-input" id="cfg-gemini-key" type="password" placeholder="AIzaSy..." value="${localStorage.getItem('gfi_gemini_key') || ''}">
             <button class="btn-primary" onclick="ModuloConfiguracion.guardarGeminiKey()" style="width:auto; padding:0 16px;">Guardar API</button>
