@@ -569,6 +569,40 @@ Consultanos por cantidad y precio 👇</textarea>`;
     UI.mostrarToast(etiqueta, activo ? 'success' : 'info');
   }
 
+  // ── SUPER ADMIN SAAS (GRANJAS) ───────────────────────────────────
+  async function cargarGranjasSaaS() {
+    const zona = document.getElementById('cfg-granjas-saas-lista');
+    if (!zona) return;
+    try {
+      const granjas = await DB.obtenerTodasLasGranjasSaaS();
+      if (!granjas.length) {
+        zona.innerHTML = '<p class="sin-alertas">No hay granjas registradas.</p>';
+        return;
+      }
+      zona.innerHTML = granjas.map(g => {
+        const nombreOwner = g.perfiles?.nombre || 'Propietario Desconocido';
+        return `
+        <div class="granja-cliente-item">
+          <div>
+            <strong>${g.nombre}</strong><br>
+            <span style="font-size:12px;color:#6b7280">${nombreOwner}</span>
+          </div>
+          <button class="btn-granja-ingresar" onclick="ModuloConfiguracion.ingresarComoTenant('${g.id}', '${g.nombre}')">Entrar</button>
+        </div>
+        `;
+      }).join('');
+    } catch (e) {
+      zona.innerHTML = '<p class="sin-alertas">Error cargando lista de clientes.</p>';
+    }
+  }
+
+  function ingresarComoTenant(granjaId, granjaNombre) {
+    if (confirm(`¿Entrar en Modo Super Admin a la granja "${granjaNombre}"?\n\nVerás y editarás los datos como si fueras este cliente.`)) {
+      Auth.setTenantActivo(granjaId, granjaNombre);
+      location.reload();
+    }
+  }
+
   // API PÚBLICA para acceso desde otros módulos
   function obtenerConfig() { return cargarConfigLocal(); }
   function modoAsistidoActivo() { return _leerModoAsistido(); }
@@ -580,6 +614,7 @@ Consultanos por cantidad y precio 👇</textarea>`;
     obtenerConfig, modoAsistidoActivo, toggleModoAsistido,
     mostrarFormGallinero, editarGallinero, guardarGallinero,
     archivarGallinero, cancelarFormGallinero,
-    aprobar, rechazar, cambiarPlan
+    aprobar, rechazar, cambiarPlan,
+    ingresarComoTenant, cargarGranjasSaaS
   };
 })();

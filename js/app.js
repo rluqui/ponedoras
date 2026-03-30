@@ -23,11 +23,17 @@ const App = (() => {
     inicializarSupabase();
 
     // Splash screen (1.5s)
-    setTimeout(() => {
+    setTimeout(async () => {
       document.getElementById('pantalla-carga').classList.add('hidden');
+      
+      // Auto-refresh token y perfil en cada arranque para asegurar SaaS
+      await Auth.verificarSesionActiva();
+      
       const usuario = Auth.obtenerUsuario();
-      if (usuario) {
+      if (usuario && usuario.id !== 'demo-001') {
         mostrarApp(usuario);
+      } else if (usuario && usuario.id === 'demo-001') {
+        mostrarApp(usuario); // Permitir acceso rápido al demo si lo tienen cacheado
       } else {
         document.getElementById('pantalla-login').classList.remove('hidden');
         configurarLogin();
