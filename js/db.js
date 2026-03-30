@@ -164,7 +164,13 @@ const DB = (() => {
     const db = obtenerSupabase();
     if (!db) return { ok: true };  // Demo: simular éxito
 
-    // Mapeo seguro de valores UI a Check Constraints de DB (sin_agua/sin_alimento -> sin)
+    const tenant = Auth.getTenantActivo();
+    if (!tenant) {
+      alert("⚠️ Error [Auth]: Sesión desincronizada. Tu usuario no tiene asignada una granja en el dispositivo. Reiniciá sesión.");
+      return { ok: false, error: "Sin granja asignada localmente." };
+    }
+
+    // Mapeo seguro de valores UI a Check Constraints de DB
     const mapearEstado = (val) => val?.startsWith('sin') ? 'sin' : val;
 
     const payload = {
@@ -179,7 +185,28 @@ const DB = (() => {
       operador_id: getOperadorUUID()
     };
 
-    const { error } = await db.from('produccion_diaria').upsert([{...payload, granja_id: Auth.getTenantActivo()}], { onConflict: 'granja_id,fecha,galpon' });
+    console.log("Upsert produccion:", payload, "Tenant:", tenant);
+
+    const { error, data } = await db.from('produccion_diaria')
+        .upsert([{...payload, granja_id: tenant}], { onConflict: 'granja_id,fecha,galpon' })
+        .select();
+
+    if (error && error.message.includes('row-level security')) {
+       console.error("RLS Detail:", error);
+       // Hacemos un check "en vivo" a la DB para ver por qué rebotó la seguridad:
+       const u = Auth.obtenerUsuario();
+       const { data: pDB } = await db.from('perfiles').select('granja_id').eq('id', u?.id).single();
+       if (!pDB || !pDB.granja_id) {
+           alert("🚨 ALERTA DB: Tu perfil en el servidor tiene 'granja_id' en NULL. \nFijate de ejecutar el script 15_saas_data_migration.sql en Supabase para arreglarlo.");
+       } else if (pDB.granja_id !== tenant) {
+           alert(`🚨 ALERTA Auth: El ID de granja de tu teléfono (${tenant}) no coincide con el de la Base de Datos (${pDB.granja_id}). \nCERRÁ SESIÓN y volvé a entrar.`);
+       } else {
+           alert("🚨 Error RLS desconocido: Tu granja_id es correcto pero la base lo rechaza. Revisá las políticas 'saas_aislamiento_multitenant'.");
+       }
+    } else if (error) {
+       alert("DB Error: " + error.message);
+    }
+
     return { ok: !error, error };
   }
 
