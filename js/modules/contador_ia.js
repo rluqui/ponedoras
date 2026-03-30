@@ -408,35 +408,63 @@ const ContadorIA = (() => {
     reader.onload = e => {
       const resultado = e.target.result;
       
-      // 🛡️ Agente QA de Cámara (Auditor Visual)
+      // 🛡️ Agente QA de Cámara (Auditor Visual de Luz y Enfoque)
       const img = new Image();
       img.onload = () => {
          const canvas = document.createElement('canvas');
          const ctx = canvas.getContext('2d');
-         const maxW = 100; // procesar versión muy chica para velocidad
+         const maxW = 300; // tamaño para detectar nitidez
          const esc = maxW / img.width;
          canvas.width = maxW;
          canvas.height = img.height * esc || 1;
          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
          
-         const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
-         let suma = 0;
+         const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+         const data = imageData.data;
+         const w = canvas.width;
+         const h = canvas.height;
+
+         // 1. Convertir a grises y evaluar Luz
+         const grises = new Uint8Array(w * h);
+         let sumaLuz = 0;
          for(let i=0; i<data.length; i+=4) {
-            suma += (0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2]);
+             const gris = (0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2]);
+             grises[i/4] = gris;
+             sumaLuz += gris;
          }
-         const luminanciaPromedio = suma / (data.length / 4);
+         const luminanciaPromedio = sumaLuz / (w * h);
+
+         // 2. Varianza del Laplaciano (evaluar Blur/Borrosidad)
+         let sumaLap = 0;
+         let sumaSqLap = 0;
+         let pV = 0;
+         for (let y = 1; y < h - 1; y++) {
+             for (let x = 1; x < w - 1; x++) {
+                 const idx = y * w + x;
+                 const lap = (grises[idx]*4) - grises[idx-w] - grises[idx-1] - grises[idx+1] - grises[idx+w];
+                 sumaLap += lap;
+                 sumaSqLap += lap * lap;
+                 pV++;
+             }
+         }
+         const mediaLap = sumaLap / pV;
+         const varianzaLap = (sumaSqLap / pV) - (mediaLap * mediaLap);
 
          const wrap = document.getElementById('foto-preview-wrap');
          const res = document.getElementById('contador-resultado');
          const btn = document.getElementById('btn-contar');
 
-         // Umbral de oscuridad extrema (configurable, 25/255)
-         if (luminanciaPromedio < 25) {
-            if (wrap) wrap.innerHTML = `<span class="foto-preview-icono">🌑</span><span class="foto-preview-texto" style="color:#ff9800">Foto demasiado oscura. Activá el flash o prendé la luz.</span>`;
+         // 3. Evaluar reglas del QA Auditor
+         let rechazo = null;
+         if (luminanciaPromedio < 25) rechazo = '🌑 Foto muy oscura. Activá el flash o luz.';
+         else if (varianzaLap < 15) rechazo = '🌫️ Foto desenfocada. Sostené firme el celular y limpiá la lente.';
+
+         if (rechazo) {
+            if (wrap) wrap.innerHTML = `<span class="foto-preview-icono">⚠️</span><span class="foto-preview-texto" style="color:#ff9800;font-weight:600">${rechazo}</span>`;
             if (res) { res.innerHTML = ''; res.classList.add('hidden'); }
             fotoConteoBase64 = null;
             if (btn) { btn.disabled = true; _quitarGlow(btn); }
-            if (typeof UI !== 'undefined') UI.mostrarToast('🌑 Foto rechazada: muy oscura', 'warning');
+            if (typeof UI !== 'undefined') UI.mostrarToast('Foto rechazada por la IA (Mala calidad)', 'error');
             return;
          }
 
