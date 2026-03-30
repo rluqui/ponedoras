@@ -302,7 +302,7 @@ const ModuloHoy = (() => {
           <div class="tarea-info" style="display:flex; justify-content:space-between; align-items:center; width:100%">
             <div style="display:flex; flex-direction:column; gap:2px">
               <span class="tarea-texto" style="${styleText}">${t.titulo}</span>
-              ${m ? `<span class="tarea-asignado">${m.avatar} ${m.nombre}</span>` : ''}
+              ${m ? `<span class="tarea-asignado" style="font-size: 0.75rem; color: var(--color-primario); font-weight: 500; background: rgba(76,175,80,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; border: 1px solid rgba(76,175,80,0.2); width: fit-content;">${m.avatar} Resp: ${m.nombre} (${m.rol || 'Equipo'})</span>` : ''}
             </div>
             <div style="display:flex; align-items:center">
               ${callToAction}
@@ -354,12 +354,20 @@ const ModuloHoy = (() => {
           tipo: 'warning', 
           icono: '📋', 
           texto: `${pendientes} tareas pendientes sin completar (Ver tareas)`,
-          accion: `document.getElementById('hoy-tareas-lista')?.scrollIntoView({behavior: 'smooth'})`
+          accion: `const el = document.getElementById('hoy-tareas-lista'); if(el){ el.scrollIntoView({behavior: 'smooth', block: 'center'}); const container = el.closest('.seccion-bloque'); if(container){ container.style.transition = 'box-shadow 0.3s, background-color 0.3s'; container.style.boxShadow = '0 0 15px var(--color-primario)'; container.style.backgroundColor = 'rgba(76, 175, 80, 0.1)'; setTimeout(() => { container.style.boxShadow = 'none'; container.style.backgroundColor = ''; }, 1200); } }`
         });
 
     } catch (e) { /* silencioso */ }
 
     if (badge) badge.textContent = alertas.length;
+    
+    const topBadge = document.getElementById('badge-notif');
+    if (topBadge) {
+      topBadge.textContent = alertas.length > 9 ? '+9' : alertas.length;
+      topBadge.style.display = alertas.length > 0 ? 'inline-block' : 'none';
+      topBadge.style.background = alertas.some(a => a.tipo === 'danger') ? '#e53935' : '#fb8c00';
+    }
+
     if (!alertas.length) {
       lista.innerHTML = '<p class="sin-alertas">✅ Todo en orden hoy</p>';
       return;

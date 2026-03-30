@@ -529,24 +529,30 @@ const ContadorIA = (() => {
 
     // Prompt JSON con coordenadas
     const instruccionBase = fotoRefBase64
-      ? `INSTRUCCIÓN CRÍTICA DE CONTEO CON REFERENCIA:
-- La IMAGEN 1 es tu REFERENCIA VISUAL: muestra exactamente 1 (un) "${objetoSeleccionado.nombre}" que debés buscar.
-- La IMAGEN 2 es la foto real donde tenés que contar.
-- Tu única tarea: detectar todos los objetos VISUALMENTE IDÉNTICOS O MUY SIMILARES al de la IMAGEN 1 en la IMAGEN 2.
-- IGNORÁ completamente cualquier otro elemento, espacio vacío, recipiente o fondo.
-- Para cada objeto detectado en la IMAGEN 2 indicá su posición central como fracción (0.0 a 1.0) del ancho y alto de la imagen.
-- Respondé ÚNICAMENTE con este JSON (sin markdown, sin explicación):
-{"total": <número entero>, "elementos": [{"cx": 0.25, "cy": 0.40}, ...]}`
+      ? `INSTRUCCIÓN CRÍTICA DE CONTEO CON REFERENCIA VISUAL:
+Estás recibiendo dos fotos en orden secuencial:
+La "IMAGEN 1" (referencia): muestra un único objeto de referencia. Elemento a buscar: "${objetoSeleccionado.nombre}".
+La "IMAGEN 2" (escena): es la captura principal donde debés contar los elementos requeridos.
+
+REGLAS DE PRECISIÓN MILIMÉTRICA:
+1. Examiná la IMAGEN 1 y entendé la forma, color, textura y proporción exacta del objeto objetivo.
+2. Buscá ese mismo objeto (VISUALMENTE IDÉNTICO O CASI IDÉNTICO) en la IMAGEN 2.
+3. No cuentes objetos que solo se parezcan un poco. Ignorá las partes del fondo, reflejos, otros objetos parecidos pero distintos, manchas o sombras. Sé extremadamente estricto; si no es idéntico a la referencia, descartalo.
+4. Para cada objeto detectado, calculá su caja delimitadora (bounding box) usando coordenadas de 0 a 1000 (donde [0,0] es arriba a la izquierda y [1000,1000] es abajo a la derecha). El formato exacto es [ymin, xmin, ymax, xmax].
+5. Respondé EXCLUSIVAMENTE con un objeto JSON válido, sin bloques de código Markdown (sin \`\`\`json), sin texto extra, respetando esta estructura literal:
+{"total": <número exacto>, "elementos": [{"caja": [ymin, xmin, ymax, xmax]}, ...]}`
       : `${objetoSeleccionado.promptFallback.replace('Solo respondé con el número entero.', '')}
-- Para cada objeto detectado indicá su posición central como fracción (0.0 a 1.0) del ancho y alto de la imagen.
-- Respondé ÚNICAMENTE con este JSON (sin markdown, sin explicación):
-{"total": <número entero>, "elementos": [{"cx": 0.25, "cy": 0.40}, ...]}`;
+- IGNORÁ fondos, sombras, u otros objetos no relacionados. Sé extremadamente estricto.
+- Para cada objeto válido detectado, calculá su caja delimitadora (bounding box) en formato de 0 a 1000 (donde [0,0] es la esquina superior izquierda y [1000,1000] la inferior derecha). Devuelve un array de 4 enteros: [ymin, xmin, ymax, xmax].
+- Respondé EXCLUSIVAMENTE con un JSON válido en este formato exacto (sin bloques de código Markdown ni texto extra):
+{"total": <número exacto>, "elementos": [{"caja": [ymin, xmin, ymax, xmax]}, ...]}`;
 
     parts.push({ text: instruccionBase });
 
     if (fotoRefBase64) {
+      parts.push({ text: 'EMPIEZA IMAGEN 1 (Referencia):' });
       parts.push({ inline_data: { mime_type: fotoRefMime, data: fotoRefBase64 } });
-      parts.push({ text: 'IMAGEN 2 (foto a contar):' });
+      parts.push({ text: 'EMPIEZA IMAGEN 2 (Escena donde contar):' });
     }
 
     parts.push({ inline_data: { mime_type: fotoConteoMime, data: fotoConteoBase64 } });
@@ -568,11 +574,24 @@ const ContadorIA = (() => {
 
     // Intentar parsear JSON de coordenadas
     try {
-      // Limpiar posible markdown code block
       const jsonLimpio = texto.replace(/```json|```/gi, '').trim();
       const parsed = JSON.parse(jsonLimpio);
       if (typeof parsed.total === 'number' && Array.isArray(parsed.elementos)) {
-        return { cantidad: parsed.total, elementos: parsed.elementos };
+        // Convertir coordenadas "caja" (ymin, xmin, ymax, xmax) en escala de 0 a 1000 a punto central relativo (0.0 a 1.0)
+        const validCoords = parsed.elementos.map(el => {
+          if (el.caja && el.caja.length === 4) {
+             const [ymin, xmin, ymax, xmax] = el.caja;
+             const cy = (ymin + (ymax - ymin) / 2) / 1000;
+             const cx = (xmin + (xmax - xmin) / 2) / 1000;
+             return { cx, cy };
+          }
+          if (el.cx !== undefined && el.cy !== undefined) {
+             return { cx: el.cx, cy: el.cy };
+          }
+          return null;
+        }).filter(Boolean);
+
+        return { cantidad: parsed.total, elementos: validCoords };
       }
     } catch (_) { /* continúa al fallback */ }
 

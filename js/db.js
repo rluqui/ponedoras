@@ -270,6 +270,10 @@ const DB = (() => {
 
     // 2. Generar Tareas Inteligentes (Auto-Checklist)
     const galpones = await obtenerGalpones();
+    const equipo = await obtenerEquipo();
+    const productor = equipo.find(e => e.rol === 'Producción' || e.rol === 'Aprendiz');
+    const vendedor = equipo.find(e => e.rol === 'Ventas' || e.rol === 'Administración');
+
     let galponesCargados = [];
 
     if (db) {
@@ -289,7 +293,9 @@ const DB = (() => {
         estado: 'pendiente',
         automatica: true,
         galpon_id: g.id,
-        prioridad: 'alta'
+        prioridad: 'alta',
+        asignado_a: productor ? productor.id : null,
+        equipo_miembros: productor ? { nombre: productor.nombre, avatar: productor.avatar, rol: productor.rol } : null
       }));
 
     const autoHechas = galpones
@@ -300,7 +306,9 @@ const DB = (() => {
         estado: 'hecho',
         automatica: true,
         galpon_id: g.id,
-        prioridad: 'baja'
+        prioridad: 'baja',
+        asignado_a: productor ? productor.id : null,
+        equipo_miembros: productor ? { nombre: productor.nombre, avatar: productor.avatar, rol: productor.rol } : null
       }));
 
     // Tarea Inteligente de Ventas + Excepción 0
@@ -318,7 +326,9 @@ const DB = (() => {
         estado: huboVentasHoy ? 'hecho' : 'pendiente',
         automatica: true,
         tipo_auto: 'ventas',
-        prioridad: 'alta'
+        prioridad: 'alta',
+        asignado_a: vendedor ? vendedor.id : null,
+        equipo_miembros: vendedor ? { nombre: vendedor.nombre, avatar: vendedor.avatar, rol: vendedor.rol } : null
     };
 
     // Retorna ordenado: Auto pendientes -> DB pendientes -> Auto Hechas -> DB hechas

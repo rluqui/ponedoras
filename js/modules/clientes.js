@@ -16,8 +16,9 @@ const ModuloClientes = (() => {
   // Mensajes WhatsApp personalizables (editables en modal)
   const MENSAJES_DEFAULT = {
     reactivar:     'Hola {nombre} 👋\nTenemos huevos frescos disponibles hoy 🥚\n¿Querés que te reserve tu pedido?',
-    disponibilidad:'Hola {nombre}! 🐔\nHoy tenemos maples disponibles para entrega inmediata.\nAvisame si necesitás y te llevo.',
-    saludo:        'Hola {nombre} 👋\n¿Cómo estás? ¿Necesitás huevos esta semana? 🥚',
+    disponibilidad:'Hola {nombre}! 🐔\nHoy sacamos maples extra frescos de granja.\nAvisame si necesitás y te los alcanzo.',
+    saludo:        'Hola {nombre} 👋\n¿Cómo estás? ¿Necesitás reponer huevos esta semana? 🥚',
+    promo:         '¡Hola {nombre}! 📢 Promo especial hoy: Si me devolvés el cartón/maple vacío, te descuento $200 en el maple lleno nuevo. ¿Te anoto? 🥚♻️',
   };
 
   function obtenerMensajes() {
@@ -547,6 +548,7 @@ const ModuloClientes = (() => {
       { tipo: 'reactivar',      label: '💤 Cliente inactivo',      plantilla: msjs.reactivar },
       { tipo: 'disponibilidad', label: '📦 Hay maples disponibles', plantilla: msjs.disponibilidad },
       { tipo: 'saludo',         label: '👋 Saludo genérico',        plantilla: msjs.saludo },
+      { tipo: 'promo',          label: '🎁 Enviar Oferta/Promo',    plantilla: msjs.promo || MENSAJES_DEFAULT.promo },
     ];
 
     const modalHtml = `

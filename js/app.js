@@ -13,7 +13,8 @@ const App = (() => {
     redes:          ModuloRedes,
     inspeccion:     ModuloInspeccion,
     configuracion:  ModuloConfiguracion,
-    dashboard:      ModuloDashboard
+    dashboard:      ModuloDashboard,
+    mas:            ModuloMas
   };
 
   let tabActiva = 'hoy';
@@ -257,7 +258,27 @@ const App = (() => {
     });
   }
 
-  return { iniciar, navegar, toggleLoginTab, loginDemo, registrar, recuperarPassword, togglePassword };
+  function verAlertasGlobales() {
+    navegar('hoy');
+    setTimeout(() => {
+      const el = document.getElementById('hoy-alertas-lista');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const container = el.closest('.seccion-bloque');
+        if (container) {
+          container.style.transition = 'box-shadow 0.3s, background-color 0.3s';
+          container.style.boxShadow = '0 0 15px var(--color-primario)';
+          container.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+          setTimeout(() => {
+            container.style.boxShadow = 'none';
+            container.style.backgroundColor = '';
+          }, 1500);
+        }
+      }
+    }, 400); // Darle tiempo a la vista HOY a que se renderice
+  }
+
+  return { iniciar, navegar, toggleLoginTab, loginDemo, registrar, recuperarPassword, togglePassword, verAlertasGlobales };
 })();
 
 // ── UI HELPERS ────────────────────────────────────────────────
