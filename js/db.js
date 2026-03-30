@@ -19,6 +19,7 @@ const DB = (() => {
     const { data, error } = await db
       .from('produccion_diaria')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .eq('fecha', hoy);
 
     if (error) { console.warn('Error produccion_diaria:', error.message); return null; }
@@ -53,6 +54,7 @@ const DB = (() => {
     const { data } = await db
       .from('produccion_diaria')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .gte('fecha', hace7)
       .order('fecha', { ascending: false });
     return data || [];
@@ -64,6 +66,7 @@ const DB = (() => {
     const { data } = await db
       .from('produccion_diaria')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .eq('fecha', fecha);
     if (!data?.length) return null;
     return {
@@ -75,7 +78,8 @@ const DB = (() => {
   async function obtenerLotesActivos() {
     const db = obtenerSupabase();
     if (!db) return DEMO_LOTES().filter(l => l.estado === 'activo');
-    const { data } = await db.from('lotes').select('*, galpon:galpones(nombre)').eq('estado', 'activo');
+    const { data } = await db.from('lotes').select('*, galpon:galpones(nombre)')
+      .eq('granja_id', Auth.getTenantActivo()).eq('estado', 'activo');
     return data || [];
   }
 
@@ -85,6 +89,7 @@ const DB = (() => {
     const { data, error } = await db
       .from('lotes')
       .select('*, galpon:galpones(nombre)')
+      .eq('granja_id', Auth.getTenantActivo())
       .order('fecha_ingreso', { ascending: false });
     if (error) return DEMO_LOTES(); // Fallback por error de schema/red
     return data || []; // Retornar vacío si no hay en la DB real
@@ -93,7 +98,7 @@ const DB = (() => {
   async function insertarLote(lote) {
     const db = obtenerSupabase();
     if (!db) return { ok: true };
-    const { error } = await db.from('lotes').insert([lote]);
+    const { error } = await db.from('lotes').insert([{...lote, granja_id: Auth.getTenantActivo()}]);
     return { ok: !error, error };
   }
 
@@ -145,7 +150,7 @@ const DB = (() => {
       operador_id: getOperadorUUID()
     };
 
-    const { error } = await db.from('produccion_diaria').upsert([payload], { onConflict: 'fecha,galpon' });
+    const { error } = await db.from('produccion_diaria').upsert([{...payload, granja_id: Auth.getTenantActivo()}], { onConflict: 'fecha,galpon' });
     return { ok: !error, error };
   }
 
@@ -157,6 +162,7 @@ const DB = (() => {
     const { data, error } = await db
       .from('galpones')
       .select('id, nombre, capacidad_aves, descripcion, terminologia, activo')
+      .eq('granja_id', Auth.getTenantActivo())
       .eq('activo', true)
       .order('nombre');
     if (error) return DEMO_GALPONES();
@@ -185,6 +191,7 @@ const DB = (() => {
     const { data, error } = await db
       .from('equipo_miembros')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .eq('activo', true)
       .order('nombre');
     if (error) return DEMO_EQUIPO();
@@ -194,7 +201,7 @@ const DB = (() => {
   async function insertarMiembro(miembro) {
     const db = obtenerSupabase();
     if (!db) return { ok: true };
-    const { error } = await db.from('equipo_miembros').insert([miembro]);
+    const { error } = await db.from('equipo_miembros').insert([{...miembro, granja_id: Auth.getTenantActivo()}]);
     return { ok: !error, error };
   }
 
@@ -224,6 +231,7 @@ const DB = (() => {
       const { data, error } = await db
         .from('tareas')
         .select('*, equipo_miembros(nombre, avatar, rol)')
+      .eq('granja_id', Auth.getTenantActivo())
         .or(`fecha_limite.eq.${hoy},fecha_limite.is.null`)
         .order('prioridad', { ascending: false });
       if (!error && data) tareasDB = data;
@@ -236,7 +244,8 @@ const DB = (() => {
     let galponesCargados = [];
 
     if (db) {
-      const { data } = await db.from('produccion_diaria').select('galpon_id, galpon').eq('fecha', hoy);
+      const { data } = await db.from('produccion_diaria').select('galpon_id, galpon')
+      .eq('granja_id', Auth.getTenantActivo()).eq('fecha', hoy);
       galponesCargados = (data || []).map(p => p.galpon_id || p.galpon);
     } else {
       const gfi_prod = JSON.parse(localStorage.getItem('gfi_prod') || '[]');
@@ -269,7 +278,8 @@ const DB = (() => {
     let huboVentasHoy = localStorage.getItem(`ventas_zero_${hoy}`) === 'true';
     if (!huboVentasHoy) {
       if (db) {
-         const { data: vts } = await db.from('ventas').select('id').eq('fecha', hoy).limit(1);
+         const { data: vts } = await db.from('ventas').select('id')
+      .eq('granja_id', Auth.getTenantActivo()).eq('fecha', hoy).limit(1);
          if (vts && vts.length > 0) huboVentasHoy = true;
       }
     }
@@ -335,6 +345,7 @@ const DB = (() => {
     const { data } = await db
       .from('inspecciones')
       .select('*, galpones(nombre)')
+      .eq('granja_id', Auth.getTenantActivo())
       .order('creado_en', { ascending: false })
       .limit(limite);
     return data || DEMO_INSPECCIONES();
@@ -355,6 +366,7 @@ const DB = (() => {
     const { data } = await db
       .from('publicaciones_redes')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .order('creado_en', { ascending: false })
       .limit(5);
     return data || DEMO_PUBLICACIONES();
@@ -368,6 +380,7 @@ const DB = (() => {
     const { data } = await db
       .from('v_vacunas_proximas')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .limit(5);
     return data || [];
   }
@@ -440,6 +453,7 @@ const DB = (() => {
     const { data, error } = await db
       .from('ventas')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .gte('fecha', hace30)
       .order('fecha', { ascending: false })
       .limit(50);
@@ -505,6 +519,7 @@ const DB = (() => {
     const { data, error } = await db
       .from('clientes')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .eq('activo', true)
       .order('nombre');
     if (error) return DEMO_CLIENTES();
@@ -514,7 +529,7 @@ const DB = (() => {
   async function insertarCliente(cliente) {
     const db = obtenerSupabase();
     if (!db) return { ok: true };
-    const { error } = await db.from('clientes').insert([cliente]);
+    const { error } = await db.from('clientes').insert([{...cliente, granja_id: Auth.getTenantActivo()}]);
     return { ok: !error, error };
   }
 
@@ -531,6 +546,7 @@ const DB = (() => {
     const { data } = await db
       .from('ventas')
       .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
       .eq('cliente_id', clienteId)
       .order('fecha', { ascending: false })
       .limit(20);
@@ -578,9 +594,11 @@ const DB = (() => {
     let todasVentas = [];
 
     if (db) {
-      const { data: cData } = await db.from('clientes').select('id').eq('captado_por_app', true).eq('activo', true);
+      const { data: cData } = await db.from('clientes').select('id')
+      .eq('granja_id', Auth.getTenantActivo()).eq('captado_por_app', true).eq('activo', true);
       clientesApp = cData || [];
-      const { data: vData } = await db.from('ventas').select('total, cliente_id, canal').gte('fecha', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]);
+      const { data: vData } = await db.from('ventas').select('total, cliente_id, canal')
+      .eq('granja_id', Auth.getTenantActivo()).gte('fecha', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]);
       todasVentas = vData || [];
     } else {
       // Demo: cliente 2 y 4 captados por la app
@@ -626,6 +644,24 @@ const DB = (() => {
     return { ok: true };
   }
 
+  // ── SUPER ADMIN SAAS ──────────────────────────────────────────
+  async function obtenerTodasLasGranjasSaaS() {
+    const db = obtenerSupabase();
+    if (!db) return [];
+    
+    // RLS (si está activo para admin) lo permitirá
+    const { data, error } = await db
+      .from('granjas')
+      .select('*, perfiles(nombre)')
+      .order('creado_en', { ascending: false });
+    
+    if (error) {
+       console.warn("SaaS Admin List error:", error.message);
+       return [];
+    }
+    return data || [];
+  }
+
   return {
     obtenerProduccionHoy, obtenerProduccionSemana, obtenerProduccionFecha,
     insertarProduccion,
@@ -641,7 +677,8 @@ const DB = (() => {
     obtenerEstadisticasApp, registrarMensajeWhatsApp,
     obtenerUsuariosPendientes, aprobarUsuario, cambiarPlanUsuario,
     limpiarBaseDeDatos,
-    obtenerDataDashboard
+    obtenerDataDashboard,
+    obtenerTodasLasGranjasSaaS
   };
 })();
 
@@ -674,13 +711,15 @@ async function obtenerDataDashboard(paramFiltro, galponId = 'todos') {
      return { produccion: _p, ventas: _v };
   }
 
-  let prodQuery = db.from('produccion_diaria').select('fecha, galpon_id, huevos, mortandad').gte('fecha', df).lte('fecha', dt);
+  let prodQuery = db.from('produccion_diaria').select('fecha, galpon_id, huevos, mortandad')
+      .eq('granja_id', Auth.getTenantActivo()).gte('fecha', df).lte('fecha', dt);
   if (galponId !== 'todos') {
      prodQuery = prodQuery.eq('galpon_id', galponId);
   }
   const { data: prod } = await prodQuery;
   
-  const { data: vent } = await db.from('ventas').select('fecha, docenas').gte('fecha', df).lte('fecha', dt);
+  const { data: vent } = await db.from('ventas').select('fecha, docenas')
+      .eq('granja_id', Auth.getTenantActivo()).gte('fecha', df).lte('fecha', dt);
 
   return { produccion: prod || [], ventas: vent || [] };
 }
@@ -693,6 +732,7 @@ async function obtenerUsuariosPendientes() {
   const { data } = await db
     .from('v_usuarios_pendientes')
     .select('*')
+      .eq('granja_id', Auth.getTenantActivo())
     .order('creado_en', { ascending: false });
   return data || [];
 }

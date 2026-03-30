@@ -3262,3 +3262,27 @@ select.campo-input option { background: var(--verde-medio); color: var(--texto-p
 .switch-toggle input:checked + .switch-slider::before {
   transform: translateX(20px);
 }
+
+/* Sticky Banner Global Admin */
+.admin-banner-global {
+  position: sticky; top: 0; z-index: 9999;
+  background-color: #f44336; color: white;
+  padding: 8px 16px; display: flex;
+  justify-content: space-between; align-items: center;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(244,67,54, 0.4);
+}
+.btn-admin-volver {
+  background: white; color: #f44336; border: none;
+  border-radius: 8px; padding: 6px 12px; font-weight: bold; cursor: pointer;
+}
+/* Granjas Client List */
+.granja-cliente-item {
+  background: #f9fafb; border-radius: 12px; padding: 12px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+  border: 1px solid #e5e7eb;
+}
+.btn-granja-ingresar {
+  background: #333; color: white; border: none;
+  padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;
+}

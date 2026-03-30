@@ -15,6 +15,22 @@ const Auth = (() => {
   };
 
   let usuarioActual = null;
+  let tenantActivo = localStorage.getItem('gfi_tenant_activo') || null;
+
+  function setTenantActivo(id, nombre) {
+    tenantActivo = id;
+    if (id) {
+      localStorage.setItem('gfi_tenant_activo', id);
+      localStorage.setItem('gfi_tenant_name', nombre || id);
+    } else {
+      localStorage.removeItem('gfi_tenant_activo');
+      localStorage.removeItem('gfi_tenant_name');
+    }
+  }
+
+  function getTenantActivo() {
+    return tenantActivo || usuarioActual?.granja_id || null;
+  }
 
   // ── LOGIN ─────────────────────────────────────────────────────
   async function iniciarSesion(email, password) {
@@ -81,6 +97,7 @@ const Auth = (() => {
       if (!usuarioActual.granja)  usuarioActual.granja  = perfil?.granja_nombre || 'Mi Granja';
       if (!usuarioActual.nivel)   usuarioActual.nivel   = 1;
       if (!usuarioActual.avatar)  usuarioActual.avatar  = perfil?.avatar || '👨‍🌾';
+      if (!usuarioActual.granja_id) usuarioActual.granja_id = perfil?.granja_id || null;
 
       localStorage.setItem('gfi_usuario', JSON.stringify(usuarioActual));
       return { ok: true, usuario: usuarioActual };
@@ -157,7 +174,7 @@ const Auth = (() => {
         
       const { data: perfil } = await db
         .from('perfiles')
-        .select('plan, aprobado')
+        .select('plan, aprobado, es_admin, granja_id')
         .eq('id', session.user.id)
         .single();
 
@@ -168,7 +185,9 @@ const Auth = (() => {
         nivel:  usuarioBD?.nivel  || 1,
         avatar: usuarioBD?.avatar || '👨‍🌾',
         plan:   perfil?.plan || 'trial',
-        aprobado: perfil?.aprobado || false
+        aprobado: perfil?.aprobado || false,
+        es_admin: perfil?.es_admin || false,
+        granja_id: perfil?.granja_id || usuarioBD?.granja_id || null
       };
       localStorage.setItem('gfi_usuario', JSON.stringify(usuarioActual));
       return usuarioActual;
@@ -193,6 +212,7 @@ const Auth = (() => {
     if (db) await db.auth.signOut().catch(() => {});
     usuarioActual = null;
     localStorage.removeItem('gfi_usuario');
+    localStorage.removeItem('gfi_tenant_activo');
     location.reload();
   }
 
@@ -200,5 +220,5 @@ const Auth = (() => {
     return obtenerUsuario()?.nivel || 1;
   }
 
-  return { iniciarSesion, registrar, verificarSesionActiva, obtenerUsuario, cerrarSesion, obtenerNivel };
+  return { iniciarSesion, registrar, verificarSesionActiva, obtenerUsuario, cerrarSesion, obtenerNivel, setTenantActivo, getTenantActivo };
 })();

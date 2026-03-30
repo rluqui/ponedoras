@@ -171,6 +171,17 @@ const App = (() => {
     document.getElementById('top-nombre-granja').textContent = usuario.granja || 'Mi Granja';
     actualizarFecha();
 
+    // Banner SuperAdmin
+    const activ = Auth.getTenantActivo();
+    if (activ && activ !== usuario.granja_id) {
+      const banner = document.getElementById('banner-superadmin');
+      const bname  = document.getElementById('superadmin-tenant-name');
+      if (banner && bname) {
+        banner.style.display = 'flex';
+        bname.textContent = localStorage.getItem('gfi_tenant_name') || activ.substring(0,8);
+      }
+    }
+
     // Badge de granja (sin número de nivel para no confundir al productor)
     const nivel = CONFIG.NIVELES[usuario.nivel || 1];
     document.getElementById('nivel-texto').textContent = `${nivel.icono} ${nivel.nombre}`;

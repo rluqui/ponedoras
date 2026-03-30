@@ -129,6 +129,12 @@ const ModuloConfiguracion = (() => {
         <div id="cfg-todos-usuarios">
           <div class="skeleton" style="height:60px;border-radius:12px;margin-top:8px"></div>
         </div>
+
+        <div class="config-titulo-sec" style="margin-top:24px;">🌐 SaaS Multi-tenant (Modo Super Admin)</div>
+        <p class="config-desc">Ingresá a la granja de un cliente para ver sus datos.</p>
+        <div id="cfg-granjas-saas-lista">
+          <div class="skeleton" style="height:60px;border-radius:12px;margin-top:8px"></div>
+        </div>
       </div>
 
       <!-- ABM de Gallineros -->
@@ -258,6 +264,7 @@ Consultanos por cantidad y precio 👇</textarea>`;
       await Promise.allSettled([
         cargarUsuariosPendientes(),
         cargarTodosUsuarios(),
+        cargarGranjasSaaS()
       ]);
     }
   }

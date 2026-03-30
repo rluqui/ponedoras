@@ -17,6 +17,11 @@
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+    <!-- BANNER SUPER ADMIN (Oculto por defecto) -->
+    <div id="banner-superadmin" class="admin-banner-global" style="display:none;">
+      <span>🚨 MODO DIOS: Viendo datos de <b id="superadmin-tenant-name"></b></span>
+      <button class="btn-admin-volver" onclick="Auth.setTenantActivo(null); location.reload();">Salir</button>
+    </div>
 
     <!-- SPLASH SCREEN -->
     <div id="pantalla-carga" class="splash-screen">
