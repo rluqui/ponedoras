@@ -201,7 +201,10 @@ const DB = (() => {
 
     const tenant = Auth.getTenantActivo();
     if (!tenant) {
-      alert("⚠️ Error [Auth]: Sesión desincronizada. Tu usuario no tiene asignada una granja en el dispositivo. Reiniciá sesión.");
+      if (typeof UI !== 'undefined') {
+          UI.mostrarToast("⚠️ Sesión desincronizada: No tenés granja asignada.", "error");
+          setTimeout(() => alert("Como recién ejecutaste el script de Super Admin, necesitás CERRAR SESIÓN en la app y volver a ingresar para que tu celular descargue tu nueva Granja Matriz."), 500);
+      }
       return { ok: false, error: "Sin granja asignada localmente." };
     }
 
