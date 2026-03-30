@@ -86,8 +86,8 @@ const DB = (() => {
       .from('lotes')
       .select('*, galpon:galpones(nombre)')
       .order('fecha_ingreso', { ascending: false });
-    if (error || !data) return DEMO_LOTES();
-    return data;
+    if (error) return DEMO_LOTES(); // Fallback por error de schema/red
+    return data || []; // Retornar vacío si no hay en la DB real
   }
 
   async function insertarLote(lote) {
@@ -129,17 +129,18 @@ const DB = (() => {
   async function insertarProduccion(registro) {
     const db = obtenerSupabase();
     if (!db) return { ok: true };  // Demo: simular éxito
-    const usuario = Auth.obtenerUsuario();
 
-    // Limpiar payload para evitar que PostgREST falle por columnas inexistentes
+    // Mapeo seguro de valores UI a Check Constraints de DB (sin_agua/sin_alimento -> sin)
+    const mapearEstado = (val) => val?.startsWith('sin') ? 'sin' : val;
+
     const payload = {
       fecha: registro.fecha,
       galpon: registro.galpon,
       huevos: registro.huevos,
       rotos: registro.rotos,
       mortandad: registro.mortandad,
-      estado_agua: registro.estado_agua,
-      estado_alimento: registro.estado_alimento,
+      estado_agua: mapearEstado(registro.estado_agua),
+      estado_alimento: mapearEstado(registro.estado_alimento),
       observaciones: registro.observaciones,
       operador_id: getOperadorUUID()
     };
@@ -158,8 +159,8 @@ const DB = (() => {
       .select('id, nombre, capacidad_aves, descripcion, terminologia, activo')
       .eq('activo', true)
       .order('nombre');
-    if (error || !data?.length) return DEMO_GALPONES();
-    return data;
+    if (error) return DEMO_GALPONES();
+    return data || []; // Retornar vacío si en base de datos 100% no hay
   }
 
   async function actualizarGalpon(id, cambios) {
@@ -186,8 +187,8 @@ const DB = (() => {
       .select('*')
       .eq('activo', true)
       .order('nombre');
-    if (error || !data?.length) return DEMO_EQUIPO();
-    return data;
+    if (error) return DEMO_EQUIPO();
+    return data || [];
   }
 
   async function insertarMiembro(miembro) {
@@ -442,8 +443,8 @@ const DB = (() => {
       .gte('fecha', hace30)
       .order('fecha', { ascending: false })
       .limit(50);
-    if (error || !data) return DEMO_VENTAS();
-    return data;
+    if (error) return DEMO_VENTAS();
+    return data || [];
   }
 
   async function insertarVenta(venta) {
@@ -506,8 +507,8 @@ const DB = (() => {
       .select('*')
       .eq('activo', true)
       .order('nombre');
-    if (error || !data) return DEMO_CLIENTES();
-    return data;
+    if (error) return DEMO_CLIENTES();
+    return data || [];
   }
 
   async function insertarCliente(cliente) {
