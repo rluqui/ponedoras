@@ -349,8 +349,13 @@ const ModuloHoy = (() => {
       // Alertas de tareas vencidas
       const tareas = await DB.obtenerTareasHoy();
       const pendientes = tareas.filter(t => t.estado !== 'hecho').length;
-      if (pendientes >= 3)
-        alertas.push({ tipo: 'warning', icono: '📋', texto: `${pendientes} tareas pendientes sin completar` });
+      if (pendientes > 0)
+        alertas.push({ 
+          tipo: 'warning', 
+          icono: '📋', 
+          texto: `${pendientes} tareas pendientes sin completar (Ver tareas)`,
+          accion: `document.getElementById('hoy-tareas-lista')?.scrollIntoView({behavior: 'smooth'})`
+        });
 
     } catch (e) { /* silencioso */ }
 
@@ -360,8 +365,10 @@ const ModuloHoy = (() => {
       return;
     }
     lista.innerHTML = alertas.map(a => `
-      <div class="alerta-item alerta-${a.tipo}">
+      <div class="alerta-item alerta-${a.tipo}"
+           ${a.accion ? `onclick="${a.accion}" style="cursor:pointer; transition:transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"` : ''}>
         <span>${a.icono}</span><span>${a.texto}</span>
+        ${a.accion ? '<span style="margin-left:auto;opacity:0.6;font-size:1.2rem;line-height:1">›</span>' : ''}
       </div>`).join('');
   }
 
@@ -405,11 +412,15 @@ const ModuloHoy = (() => {
     }
   }
 
-  function confirmarZeroVentas(e) {
+  async function confirmarZeroVentas(e) {
     if (e) e.stopPropagation();
     if (confirm("¿Registrar el final del día SIN ventas concretadas? Esta acción cerrará la tarea.")) {
        const hoy = new Date().toISOString().split('T')[0];
-       localStorage.setItem(`ventas_zero_${hoy}`, 'true');
+       const venta_cero = {
+           fecha: hoy, canal: 'Otro', cliente_nombre: 'Día cerrado sin ventas', maples_entregados: 0, precio_maple: 0, total: 0, estado_entrega: 'entregado', estado_pago: 'cobrado', notas: 'Día cerrado manualmente'
+       };
+       await DB.insertarVenta(venta_cero);
+       localStorage.setItem(`ventas_zero_${hoy}`, 'true'); // fallback local solo por las dudas
        UI.mostrarToast("Día cerrado sin ventas", "success");
        App.navegar('hoy');
     }

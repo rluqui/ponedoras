@@ -59,7 +59,7 @@ const ModuloDashboard = (() => {
            </div>
            <div class="kpi-card">
               <div class="kpi-valor kpi-amarillo" id="dash-ventas">—</div>
-              <div class="kpi-label">Docenas vendidas</div>
+              <div class="kpi-label">Maples vendidos</div>
            </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ const ModuloDashboard = (() => {
     // Preparar totales
     const maxHuevos = datos.produccion.reduce((s, d) => s + d.huevos, 0);
     const maxBajas = datos.produccion.reduce((s, d) => s + d.mortandad, 0);
-    const maxVentas = datos.ventas.reduce((s, v) => s + v.docenas, 0);
+    const maxVentas = datos.ventas.reduce((s, v) => s + (v.maples_entregados || 0), 0);
 
     const elHuevos = document.getElementById('dash-huevos');
     if(elHuevos) elHuevos.textContent = maxHuevos.toLocaleString('es-AR');
@@ -179,7 +179,7 @@ const ModuloDashboard = (() => {
 
     datos.ventas.forEach(v => {
       if(!fechasMap[v.fecha]) fechasMap[v.fecha] = { huevos: 0, mortandad: 0, ventas: 0 };
-      fechasMap[v.fecha].ventas += (v.docenas * 12); // convertimos a huevos individuales
+      fechasMap[v.fecha].ventas += ((v.maples_entregados || 0) * 30); // convertimos a huevos individuales
     });
 
     // Ordenar fechas cronologicamente

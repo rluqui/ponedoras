@@ -236,10 +236,15 @@ IMPORTANTE:
   }
 
   async function llamarGemini(pregunta) {
-    const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_KEY) ? CONFIG.GEMINI_KEY : null;
+    const configKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_KEY && CONFIG.GEMINI_KEY !== 'TU_GEMINI_API_KEY') ? CONFIG.GEMINI_KEY : null;
+    const localKey = localStorage.getItem('gfi_gemini_key');
+    const apiKey = configKey || localKey;
 
-    // Modo sin API Key: respuestas de ejemplo
-    if (!apiKey || apiKey === 'TU_GEMINI_API_KEY') {
+    // Respuestas demo o solicitud de API Key
+    if (!apiKey) {
+      if (pregunta.toLowerCase().includes('configur') && (pregunta.toLowerCase().includes('como') || pregunta.toLowerCase().includes('dónde') || pregunta.toLowerCase().includes('donde') || pregunta.toLowerCase().includes('gemini'))) {
+         return '⚙️ **Cómo configurar la Inteligencia Artificial:**\n\n1. Andá a la ruedita de **Configuración** abajo a la izquierda en tu pantalla principal.\n2. Buscá la sección que dice **Mi Cuenta**.\n3. Vas a ver un cuadrito rojo que dice "Asistente Virtual Inteligente (API Key)".\n4. Ahí pegás tu clave de Gemini (si no tenés una, buscala gratis en aistudio.google.com) y le dás a Guardar.\n\n¡Una vez guardada, cerrá este chat, volvelo a abrir y podré responderte con contexto del clima, mercados en tiempo real, e interpretar enfermedades específicas con memoria inteligente progresiva!';
+      }
       return respuestaDemo(pregunta);
     }
 

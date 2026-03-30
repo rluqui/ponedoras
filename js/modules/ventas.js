@@ -217,6 +217,7 @@ const ModuloVentas = (() => {
             · ${v.tipo_huevo || ''} · ${v.fecha}
             ${v.fecha_entrega && estadoEntrega(v) === 'programado' ? `<span class="venta-notas-tag">📅 Entrega: ${formatFecha(v.fecha_entrega)}</span>` : ''}
             ${v.notas ? `<span class="venta-notas-tag">📝 ${v.notas}</span>` : ''}
+            <span class="venta-notas-tag" style="background:rgba(255,255,255,0.05); color:var(--texto-secundario)">👤 Por: ${v.operador_nombre || 'Sistema'}</span>
           </div>
           <!-- Dos badges de estado independientes -->
           <div class="venta-badges">

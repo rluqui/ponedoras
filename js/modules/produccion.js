@@ -178,7 +178,38 @@ const ModuloProduccion = (() => {
         ✅ Guardar el día
       </button>
       <p class="hint-texto">Los datos se guardan en tu granja y actualizan el panel de hoy</p>
+
+      <div class="seccion-bloque" style="margin-top:32px; padding:16px; background:rgba(0,0,0,0.15); border-radius:12px;">
+         <h4 class="seccion-titulo" style="font-size:0.95rem; margin-bottom:12px">📝 Últimas recolecciones</h4>
+         <div id="prod-ultimas-cargas" style="display:flex; flex-direction:column; gap:8px">
+           <div class="skeleton" style="height:35px;border-radius:6px"></div>
+           <div class="skeleton" style="height:35px;border-radius:6px"></div>
+         </div>
+      </div>
     </div>`;
+  }
+
+  async function postRender() {
+     const listaEl = document.getElementById('prod-ultimas-cargas');
+     if(!listaEl) return;
+     try {
+        const h = await DB.obtenerUltimasProducciones();
+        if(!h.length) {
+            listaEl.innerHTML = '<p class="hint-texto">Sin cargas recientes</p>';
+            return;
+        }
+        listaEl.innerHTML = h.map(r => `
+           <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px">
+               <div>
+                  <div style="font-size:0.85rem; font-weight:600">${r.huevos} huevos <span style="font-weight:400; color:var(--texto-secundario)">(${r.galpon})</span></div>
+                  <div style="font-size:0.75rem; color:var(--texto-terciario)">👤 Cargado por: ${r.operador_nombre}</div>
+               </div>
+               <div style="font-size:0.8rem; color:var(--texto-secundario)">
+                   ${r.fecha.split('-').reverse().join('/')}
+               </div>
+           </div>
+        `).join('');
+     } catch(e) { listaEl.innerHTML = ''; }
   }
 
   // ── SELECCIÓN DE GALLINERO ────────────────────────────────────
@@ -279,5 +310,5 @@ const ModuloProduccion = (() => {
     }
   }
 
-  return { render, cargarDatos, ajustar, seleccionar, seleccionarGalpon, setObs, guardar, establecerValor };
+  return { render, postRender, cargarDatos, ajustar, seleccionar, seleccionarGalpon, setObs, guardar, establecerValor };
 })();

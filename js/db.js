@@ -60,6 +60,35 @@ const DB = (() => {
     return data || [];
   }
 
+  async function obtenerMapaOperadores() {
+     const db = obtenerSupabase();
+     if (!db) return {};
+     const { data } = await db.from('perfiles').select('id, nombre');
+     const mapa = {};
+     if (data) data.forEach(p => mapa[p.id] = p.nombre);
+     return mapa;
+  }
+
+  async function obtenerUltimasProducciones() {
+    const db = obtenerSupabase();
+    if (!db) return [{ fecha: new Date().toISOString().split('T')[0], galpon: 'Galpón Demo', huevos: 154, operador_nombre: 'Demo' }];
+    
+    const { data } = await db
+      .from('produccion_diaria')
+      .select('fecha, galpon, huevos, operador_id')
+      .eq('granja_id', Auth.getTenantActivo())
+      .order('creado_en', { ascending: false })
+      .limit(5);
+      
+    const mapaOperadores = await obtenerMapaOperadores();
+    if (data) {
+       data.forEach(p => {
+           p.operador_nombre = mapaOperadores[p.operador_id] || (p.operador_id ? 'Usuario Inválido' : 'Sistema / Automático');
+       });
+    }
+    return data || [];
+  }
+
   async function obtenerProduccionFecha(fecha) {
     const db = obtenerSupabase();
     if (!db) return null;
@@ -231,8 +260,8 @@ const DB = (() => {
       const { data, error } = await db
         .from('tareas')
         .select('*, equipo_miembros(nombre, avatar, rol)')
-      .eq('granja_id', Auth.getTenantActivo())
-        .or(`fecha_limite.eq.${hoy},fecha_limite.is.null`)
+        .eq('granja_id', Auth.getTenantActivo())
+        .or(`fecha_limite.eq.${hoy},and(fecha_limite.lte.${hoy},estado.neq.hecho),and(fecha_limite.is.null,estado.neq.hecho)`)
         .order('prioridad', { ascending: false });
       if (!error && data) tareasDB = data;
     } else {
@@ -458,6 +487,15 @@ const DB = (() => {
       .order('fecha', { ascending: false })
       .limit(50);
     if (error) return DEMO_VENTAS();
+    
+    // Mapear el nombre del autor
+    const mapaOperadores = await obtenerMapaOperadores();
+    if (data) {
+       data.forEach(v => {
+           v.operador_nombre = mapaOperadores[v.registrado_por] || (v.registrado_por ? 'Socio' : 'Sistema / App');
+       });
+    }
+    
     return data || [];
   }
 
@@ -502,9 +540,9 @@ const DB = (() => {
     const hoy = new Date();
     const hace = (d) => new Date(hoy - d * 86400000).toISOString().split('T')[0];
     return [
-      { id: '1', fecha: hace(0), canal: 'Almacén',  cliente_nombre: 'Alm. Don Luis',    cliente_id: '2', maples_entregados: 10, precio_maple: 3500, total: 35000, tipo_huevo: 'Grande',       estado_entrega: 'entregado',  estado_pago: 'cobrado',   fecha_entrega: hace(0),  monto_cobrado: 35000, notas: '' },
-      { id: '2', fecha: hace(0), canal: 'Directo',  cliente_nombre: 'María González',    cliente_id: '1', maples_entregados:  5, precio_maple: 3800, total: 19000, tipo_huevo: 'Extra grande', estado_entrega: 'entregado',  estado_pago: 'pendiente', fecha_entrega: hace(0),  monto_cobrado: 0,     notas: '' },
-      { id: '3', fecha: hace(1), canal: 'WhatsApp', cliente_nombre: 'Familia Soria',     cliente_id: '3', maples_entregados:  3, precio_maple: 3500, total: 10500, tipo_huevo: 'Mediano',     estado_entrega: 'programado', estado_pago: 'pendiente', fecha_entrega: hace(-2), monto_cobrado: 0,     notas: 'Entregar el martes' },
+      { id: '1', fecha: hace(0), canal: 'Almacén',  cliente_nombre: 'Alm. Don Luis',    cliente_id: '2', maples_entregados: 10, precio_maple: 3500, total: 35000, tipo_huevo: 'Grande',       estado_entrega: 'entregado',  estado_pago: 'cobrado',   fecha_entrega: hace(0),  monto_cobrado: 35000, notas: '', operador_nombre: 'Demo' },
+      { id: '2', fecha: hace(0), canal: 'Directo',  cliente_nombre: 'María González',    cliente_id: '1', maples_entregados:  5, precio_maple: 3800, total: 19000, tipo_huevo: 'Extra grande', estado_entrega: 'entregado',  estado_pago: 'pendiente', fecha_entrega: hace(0),  monto_cobrado: 0,     notas: '', operador_nombre: 'Demo' },
+      { id: '3', fecha: hace(1), canal: 'WhatsApp', cliente_nombre: 'Familia Soria',     cliente_id: '3', maples_entregados:  3, precio_maple: 3500, total: 10500, tipo_huevo: 'Mediano',     estado_entrega: 'programado', estado_pago: 'pendiente', fecha_entrega: hace(-2), monto_cobrado: 0,     notas: 'Entregar el martes', operador_nombre: 'Demo' },
       { id: '4', fecha: hace(2), canal: 'Directo',  cliente_nombre: 'Rest. El Rancho',   cliente_id: '4', maples_entregados: 20, precio_maple: 3400, total: 68000, tipo_huevo: 'Grande',       estado_entrega: 'entregado',  estado_pago: 'cobrado',   fecha_entrega: hace(2),  monto_cobrado: 68000, notas: '' },
       { id: '5', fecha: hace(3), canal: 'Almacén',  cliente_nombre: 'Alm. Don Luis',    cliente_id: '2', maples_entregados:  8, precio_maple: 3500, total: 28000, tipo_huevo: 'Grande',       estado_entrega: 'entregado',  estado_pago: 'parcial',   fecha_entrega: hace(3),  monto_cobrado: 14000, notas: 'Restó $ 14.000' },
       { id: '6', fecha: hace(4), canal: 'WhatsApp', cliente_nombre: 'María González',    cliente_id: '1', maples_entregados:  4, precio_maple: 3800, total: 15200, tipo_huevo: 'Extra grande', estado_entrega: 'entregado',  estado_pago: 'cobrado',   fecha_entrega: hace(4),  monto_cobrado: 15200, notas: '' },
@@ -669,7 +707,7 @@ const DB = (() => {
     obtenerGalpones, insertarGalpon, actualizarGalpon, desactivarGalpon,
     obtenerEquipo, insertarMiembro, actualizarMiembro, desactivarMiembro,
     obtenerTareasHoy, toggleTareaDB, insertarTarea,
-    obtenerVentas, insertarVenta, actualizarEstadoVenta,
+    obtenerVentas, insertarVenta, actualizarEstadoVenta, obtenerUltimasProducciones,
     obtenerClientes, insertarCliente, actualizarCliente, obtenerVentasCliente,
     insertarInspeccion, obtenerHistorialInspecciones,
     insertarPublicacion, obtenerPublicacionesRecientes,
@@ -706,7 +744,7 @@ async function obtenerDataDashboard(paramFiltro, galponId = 'todos') {
        const t = new Date(dt); t.setDate(t.getDate() - i);
        const d = t.toISOString().split('T')[0];
        _p.push({ fecha: d, huevos: Math.floor(300+Math.random()*20), mortandad: Math.floor(Math.random()*2), galpon_id: 'demo1' });
-       if(Math.random() > 0.3) _v.push({ fecha: d, docenas: Math.floor(10+Math.random()*15) });
+       if(Math.random() > 0.3) _v.push({ fecha: d, maples_entregados: Math.floor(10+Math.random()*5) });
      }
      return { produccion: _p, ventas: _v };
   }
@@ -718,7 +756,7 @@ async function obtenerDataDashboard(paramFiltro, galponId = 'todos') {
   }
   const { data: prod } = await prodQuery;
   
-  const { data: vent } = await db.from('ventas').select('fecha, docenas')
+  const { data: vent } = await db.from('ventas').select('fecha, maples_entregados')
       .eq('granja_id', Auth.getTenantActivo()).gte('fecha', df).lte('fecha', dt);
 
   return { produccion: prod || [], ventas: vent || [] };

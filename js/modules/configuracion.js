@@ -126,6 +126,15 @@ const ModuloConfiguracion = (() => {
             🗑 Limpiar App (Borrar datos)
           </button>
         </div>
+
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--color-border);">
+          <h4 style="font-size:0.85rem; color:var(--color-texto-sec); margin-bottom:8px;">🤖 Asistente Virtual Inteligente (API Key)</h4>
+          <p class="config-desc" style="margin-bottom:8px">Pegá tu API Key de Gemini para activar las respuestas inteligentes personalizadas.</p>
+          <div style="display:flex;gap:8px;">
+            <input class="campo-input" id="cfg-gemini-key" type="password" placeholder="AIzaSy..." value="${localStorage.getItem('gfi_gemini_key') || ''}">
+            <button class="btn-primary" onclick="ModuloConfiguracion.guardarGeminiKey()" style="width:auto; padding:0 16px;">Guardar API</button>
+          </div>
+        </div>
       </div>
 
       <!-- Panel admin (visible solo si es_admin = true) -->

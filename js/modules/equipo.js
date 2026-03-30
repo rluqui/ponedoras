@@ -25,6 +25,14 @@ const ModuloEquipo = (() => {
         <button class="btn-agregar" onclick="ModuloEquipo.abrirModal('nuevo')">+ Agregar</button>
       </div>
 
+      <!-- DASHBOARD DEL EQUIPO -->
+      <div class="ventas-resumen-grid" id="equipo-dashboard" style="margin-bottom: 24px;">
+         <div class="skeleton" style="height:80px;border-radius:12px;width:100%"></div>
+      </div>
+
+      <div class="seccion-header">
+         <h3 class="seccion-titulo" style="font-size:1.1rem">Integrantes</h3>
+      </div>
       <div id="equipo-cuerpo">
         <div class="skeleton" style="height:72px;border-radius:16px"></div>
         <div class="skeleton" style="height:72px;border-radius:16px;margin-top:8px"></div>
@@ -61,13 +69,43 @@ const ModuloEquipo = (() => {
 
   // ── POST RENDER ───────────────────────────────────────────────
   async function postRender() {
-    await cargarMiembros();
+    await Promise.allSettled([
+        cargarMiembros(),
+        cargarDashboardEquipo()
+    ]);
     if (vistaMiembro) {
       await cargarTareasMiembro(vistaMiembro);
     }
     if (modalAbierto !== null) {
       mostrarModal(modalAbierto);
     }
+  }
+
+  async function cargarDashboardEquipo() {
+    const dash = document.getElementById('equipo-dashboard');
+    if (!dash) return;
+    try {
+      const tareas = await DB.obtenerTareasHoy();
+      const total = tareas.length;
+      const hechas = tareas.filter(t => t.estado === 'hecho').length;
+      const pendientes = total - hechas;
+      const eficiencia = total > 0 ? Math.round((hechas / total) * 100) : 0;
+
+      dash.innerHTML = `
+        <div class="ventas-kpi">
+          <div class="ventas-kpi-val">${total}</div>
+          <div class="ventas-kpi-label">📝 Tareas hoy</div>
+        </div>
+        <div class="ventas-kpi">
+          <div class="ventas-kpi-val ${pendientes > 0 ? 'kpi-naranja' : 'kpi-verde'}">${pendientes}</div>
+          <div class="ventas-kpi-label">⏳ Pendientes</div>
+        </div>
+        <div class="ventas-kpi">
+          <div class="ventas-kpi-val ${eficiencia >= 80 ? 'kpi-verde' : 'kpi-naranja'}">${eficiencia}%</div>
+          <div class="ventas-kpi-label">⚙️ Eficiencia</div>
+        </div>
+      `;
+    } catch(e) { dash.innerHTML = ''; }
   }
 
   async function cargarMiembros() {
@@ -279,6 +317,7 @@ const ModuloEquipo = (() => {
     modalAbierto = null;
     document.getElementById('contenido-principal').innerHTML = renderLista();
     cargarMiembros();
+    cargarDashboardEquipo();
   }
 
   async function toggleTarea(id, estadoActual) {
