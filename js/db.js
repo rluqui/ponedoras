@@ -179,7 +179,7 @@ const DB = (() => {
       operador_id: getOperadorUUID()
     };
 
-    const { error } = await db.from('produccion_diaria').upsert([{...payload, granja_id: Auth.getTenantActivo()}], { onConflict: 'fecha,galpon' });
+    const { error } = await db.from('produccion_diaria').upsert([{...payload, granja_id: Auth.getTenantActivo()}], { onConflict: 'granja_id,fecha,galpon' });
     return { ok: !error, error };
   }
 
