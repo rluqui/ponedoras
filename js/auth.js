@@ -149,18 +149,26 @@ const Auth = (() => {
       }
 
       // Sesión válida: cargar perfil
-      const { data: perfil } = await db
+      const { data: usuarioBD } = await db
         .from('usuarios')
         .select('*')
         .eq('auth_id', session.user.id)
         .single();
+        
+      const { data: perfil } = await db
+        .from('perfiles')
+        .select('plan, aprobado')
+        .eq('id', session.user.id)
+        .single();
 
       usuarioActual = {
-        ...(perfil || {}),
+        ...(usuarioBD || {}),
         email: session.user.email,
-        granja: perfil?.granja || 'Mi Granja',
-        nivel:  perfil?.nivel  || 1,
-        avatar: perfil?.avatar || '👨‍🌾'
+        granja: usuarioBD?.granja || 'Mi Granja',
+        nivel:  usuarioBD?.nivel  || 1,
+        avatar: usuarioBD?.avatar || '👨‍🌾',
+        plan:   perfil?.plan || 'trial',
+        aprobado: perfil?.aprobado || false
       };
       localStorage.setItem('gfi_usuario', JSON.stringify(usuarioActual));
       return usuarioActual;
