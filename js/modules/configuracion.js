@@ -622,6 +622,17 @@ Consultanos por cantidad y precio 👇</textarea>`;
     }
   }
 
+  function guardarGeminiKey() {
+    const v = document.getElementById('cfg-gemini-key')?.value?.trim();
+    if (v) {
+        localStorage.setItem('gfi_gemini_key', v);
+        UI.mostrarToast('✅ API Key de Gemini guardada', 'success');
+    } else {
+        localStorage.removeItem('gfi_gemini_key');
+        UI.mostrarToast('API Key borrada', 'info');
+    }
+  }
+
   // API PÚBLICA para acceso desde otros módulos
   function obtenerConfig() { return cargarConfigLocal(); }
   function modoAsistidoActivo() { return _leerModoAsistido(); }
@@ -634,6 +645,6 @@ Consultanos por cantidad y precio 👇</textarea>`;
     mostrarFormGallinero, editarGallinero, guardarGallinero,
     archivarGallinero, cancelarFormGallinero,
     aprobar, rechazar, cambiarPlan,
-    ingresarComoTenant, cargarGranjasSaaS
+    ingresarComoTenant, cargarGranjasSaaS, guardarGeminiKey
   };
 })();
